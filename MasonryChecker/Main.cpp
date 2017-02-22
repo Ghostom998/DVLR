@@ -14,13 +14,13 @@
 */
 
 void Intro();
-void StartProgram();
 DVLR Wall; // A wall object in the DVLR class
 
 int main()
 {
 	Intro();
-	StartProgram();
+	Wall.StartProgram();
+	// TODO include function that produces txt file output
 	system("pause");
 	return 0;
 }
@@ -32,10 +32,17 @@ void Intro()
 	return;
 }
 
-void StartProgram()
+void DVLR::StartProgram()
 {
-	Wall.GetSlenderness();
-	//Wall.GetUltLoad();
+	SR = GetSlenderness();
+	std::cout << "And therefore the Slenderness Ratio, SR = Heff/Teff = " << Heff << " / " << Teff << " = "; 
+	std::cout << SR << std::endl << std::endl;
+	IsSlendernessOK(SR);
+
+	PSF = GetSafetyFactor();
+	std::cout << "And therefore the Partial Safety Factor to be adopted, PSF = " << PSF << std::endl << std::endl;
+
+	Wult = GetUltLoad();
 	/*Wall.GetBeta();
 	Wall.GetSAF();
 	Wall.GetMinFk(); */
