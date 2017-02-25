@@ -1,7 +1,7 @@
 // MasonryChecker.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "MasonryChecker.h"
 #include <iostream>
 //using namespace std;
@@ -35,7 +35,7 @@ void Intro()
 void DVLR::StartProgram()
 {
 	SR = GetSlenderness();
-	std::cout << "And therefore the Slenderness Ratio, SR = Heff/Teff = " << Heff << " / " << Teff << " = "; 
+	std::cout << "And therefore the Slenderness Ratio, SR = Heff/Teff = " << Heff << " / " << Teff << " = ";
 	std::cout << SR << std::endl << std::endl;
 	IsSlendernessOK(SR);
 

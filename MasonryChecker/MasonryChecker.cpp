@@ -1,7 +1,7 @@
 // DVLR.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string>
@@ -23,7 +23,7 @@ const float DVLR::GetSlenderness()
 	std::cout << "Therefore, effective height, Heff = " << RestraintFactor;
 	std::cout << " * " << HWall << " = " << Heff << "mm" << std::endl;
 
-	return Heff / Teff; // TODO return the slenderness
+	return Heff / Teff;
 }
 
 // Returns the safety factor based on text input
@@ -42,7 +42,10 @@ const double DVLR::GetSafetyFactor()
 
 const float DVLR::GetUltLoad()
 {
-	// TODO Get loads
+	GetLoads(); // populate our load array with eccentric and concentric dead and live loads
+	GetSelfWeight();
+	//GetSelfWeight();
+	//GetUltLineLoad();
 	// Factor them up
 	// Check the spread (and if they spread)
 	// Determine the total load
@@ -66,12 +69,12 @@ const float DVLR::GetTeff()
 
 	if (t4 >= t3)
 	{
-		TeffEquation = "Max{T1 ; T2} = ";
+		TeffEquation = "Max{t1 ; t2} = ";
 		return t4;
 	}
 	else
 	{
-		TeffEquation = "(TLeaf[1] + TLeaf[2])) / 3 = ";
+		TeffEquation = "2(t1 + t2) / 3 = ";
 		return t3;
 	}
 }
@@ -119,7 +122,7 @@ const float DVLR::GetRestraint()
 	return 0.0;
 }
 
-const void DVLR::IsSlendernessOK(float& SR)
+void DVLR::IsSlendernessOK(float& SR)
 {
 	if (SR >= 27)
 	{
@@ -133,7 +136,6 @@ const void DVLR::IsSlendernessOK(float& SR)
 		std::cout << "SR < 27 and therefore within the scope of BS 5628-1." << std::endl << std::endl;
 	}
 }
-
 
 int DVLR::GetConstrControl()
 {
@@ -161,7 +163,7 @@ int DVLR::GetConstrControl()
 		}
 		std::cin.ignore(1000, '\n'); // Clear buffer to prevent errors
 	} while (!IsCValid);
-	return -1;
+	std::exit(-1);
 }
 
 int DVLR::GetManufControl()
@@ -189,6 +191,68 @@ int DVLR::GetManufControl()
 		}
 		std::cin.ignore(1000, '\n'); // Clear buffer to prevent errors
 	} while (!IsMValid);
-	return -1;
+	std::exit(-1);
 }
 
+void DVLR::GetLoads()
+{
+int x = 0; // access to load array
+std::cout << "Please enter the applied line loading at the top of the wall:" << std::endl;
+
+for(int i = 1 ; i <= 2 ; i++)
+{
+	std::cout << "Leaf " << i << ",";
+	for(int j = 1 ; j <= 2 ; j++)
+	{
+		if(j==1) {std::cout << "\n  eccentric, ";}
+		else {std::cout << "  concentric, ";}
+		for( int k = 1 ; k <=2 ; k++)
+		{
+			if(k==1) {std::cout << "\n\tDead load [kN/m]: ";}
+			else {std::cout << "\tLive load [kN/m]: ";}
+			std::cin >> Load[x];
+			x++;
+		}
+	}
+}
+return;
+}
+
+const void DVLR::GetSelfWeight()
+{
+	std::cout << "\nPlease enter the self weight of masonry," << std::endl;
+	for(int i=1 ; i <= 2 ; i++)
+	{
+		std::cout << "  Leaf " << i << ": ";
+		std::cin >> UnitWeight[i];
+	}
+	float PtFourH = 0.4*HWall/1000;
+
+	std::cout << "Therefore self weight at 0.4H, " << PtFourH << "m," << std::endl;
+
+	for(int i = 1 ; i <= 2 ; i++)
+	{
+		SelfWeight[i] = UnitWeight[i]*(PtFourH)*(TLeaf[i]/1000);
+		std::cout << "Leaf " << i << ": " << SelfWeight[i] << "kN/m" << std::endl;
+	}
+	return;
+}
+
+const void DVLR::GetSpreadLoad()
+{
+		std::cout << "Please enter the length of wall considered, L: ";
+		std::cin >> L;
+		for(int i = 0 ; i < 2 ; i++)
+		{
+			std::cout << "Please enter the width of opening " << i << ": ";
+			std::cin >> OpWidth[i];
+			std::cout << "Please enter the bearing length of the member forming opening " << i << ": ";
+			std::cin >> BLength[i];
+		}
+		return;
+}
+
+const bool DoesLoadSpreadLap()
+{
+	return true;
+}
