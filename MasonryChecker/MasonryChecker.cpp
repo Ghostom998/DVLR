@@ -1,7 +1,7 @@
-// DVLR.cpp : Defines the entry point for the console application.
+// MasonryChecker.cpp : Defines the entry point for the console application.
 //
 
-//#include "stdafx.h"
+//#include "stdafx.h" // Turn on in Visual Studio
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string>
@@ -44,8 +44,7 @@ const float DVLR::GetUltLoad()
 {
 	GetLoads(); // populate our load array with eccentric and concentric dead and live loads
 	GetSelfWeight();
-	//GetSelfWeight();
-	//GetUltLineLoad();
+	GetSpreadLoad();
 	// Factor them up
 	// Check the spread (and if they spread)
 	// Determine the total load
@@ -226,7 +225,7 @@ const void DVLR::GetSelfWeight()
 		std::cout << "  Leaf " << i << ": ";
 		std::cin >> UnitWeight[i];
 	}
-	float PtFourH = 0.4*HWall/1000;
+	PtFourH = 0.4*HWall/1000;
 
 	std::cout << "Therefore self weight at 0.4H, " << PtFourH << "m," << std::endl;
 
@@ -238,21 +237,39 @@ const void DVLR::GetSelfWeight()
 	return;
 }
 
-const void DVLR::GetSpreadLoad()
+const float DVLR::GetSpreadLoad() // TODO add returns
 {
-		std::cout << "Please enter the length of wall considered, L: ";
-		std::cin >> L;
-		for(int i = 0 ; i < 2 ; i++)
+	GetOpenings();
+	if(OpWidth[1] != 0 && OpWidth[1] != 0)
+	{
+		if(Spread[1]+Spread[2] >= L)
 		{
-			std::cout << "Please enter the width of opening " << i << ": ";
-			std::cin >> OpWidth[i];
-			std::cout << "Please enter the bearing length of the member forming opening " << i << ": ";
-			std::cin >> BLength[i];
+			// function to get double lapped line load
 		}
-		return;
+		// else function to get greatest single lapped line load
+	}
+	else if(OpWidth[1] != 0 ||OpWidth[2] != 0 )
+	{
+		//function to get greatest single lapped line load
+	}
+	return 0.f;
 }
 
-const bool DoesLoadSpreadLap()
+void DVLR::GetOpenings()
 {
-	return true;
+	std::cout << "\nPlease enter the length of wall considered, L [mm]:  ";
+	std::cin >> L;
+	for(int i = 1 ; i <= 2 ; i++)
+	{
+		std::cout << "Please enter the width of opening " << i << " [mm]:  ";
+		std::cin >> OpWidth[i];
+		if(OpWidth[i] != 0)
+		{
+			std::cout << "Please enter the bearing length of the member forming opening " << i << " [mm]:  ";
+			std::cin >> BLength[i];
+			Spread[i] = {BLength[i]+(PtFourH*1000)};
+			std::cout << "Load spread length = " << Spread[i] << "mm" << std::endl;
+		}
+	}
+	return;
 }

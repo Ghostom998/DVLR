@@ -46,10 +46,12 @@ public: // Methods
 
 	const float GetUltLoad();
 		void GetLoads();
-		const bool DoesLoadSpreadLap();
-		const void GetSpreadLoad();
+		void GetOpenings();
+		const float GetSpreadLoad();
 		const void GetSelfWeight();
 		const float GetUltLineLoad();
+		const float GetSingleLapLoad();
+		const float GetDoubleLapLoad();
 
 	const float GetBeta();
 	const float GetSAF(float&, float&);
@@ -71,6 +73,8 @@ private: // Members
 	float RestraintFactor = 0;
 	/// Wall effective hieght
 	float Heff = 0;
+	/// 0.4H from the top of the wall
+	float PtFourH =0;
 	/// Length of wall considered
 	float L = 0;
 	/// Opening width
@@ -100,6 +104,8 @@ private: // Members
 	float Wult = 0;
 	/// Opening widths
 	float OpenWidth[2] = { 0, 0 };
+	/// Load Spread Length, assumed at 45 degrees from edge of member bearing
+	float Spread[2] = {0, 0};
 
 };
 
