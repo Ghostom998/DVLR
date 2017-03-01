@@ -1,7 +1,7 @@
 // MasonryChecker.cpp : Defines the entry point for the console application.
 //
 
-//#include "stdafx.h" // Turn on in Visual Studio
+#include "stdafx.h" // Turn on in Visual Studio
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string>
@@ -108,6 +108,20 @@ void DVLR::IsSlendernessOK(double& SR)
 	{
 		std::cout << "SR < 27 and therefore within the scope of BS 5628-1." << std::endl << std::endl;
 	}
+}
+
+// Returns the safety factor based on text input
+const double DVLR::GetSafetyFactor()
+{
+	std::cout << "Determine the Partial Safety Factor :" << std::endl;
+
+	// Defines the table that the Partial Safety Factor is taken from
+	double PSFTable[2][2] = { { 2.5, 2.8 },{ 3.1, 3.5 } };
+
+	int ConstrControl = GetConstrControl();
+	int ManufControl = GetManufControl();
+
+	return PSFTable[ConstrControl][ManufControl];
 }
 
 // Returns the safety factor based on text input
