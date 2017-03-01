@@ -11,7 +11,7 @@ DVLR::DVLR()
 	// Default Constructor
 }
 
-const float DVLR::GetSlenderness()
+const double DVLR::GetSlenderness()
 {
 	std::cout << "Determine the Slenderness Ratio:" << std::endl;
 
@@ -26,45 +26,19 @@ const float DVLR::GetSlenderness()
 	return Heff / Teff;
 }
 
-// Returns the safety factor based on text input
-const double DVLR::GetSafetyFactor()
-{
-	std::cout << "Determine the Partial Safety Factor :" << std::endl;
-
-	// Defines the table that the Partial Safety Factor is taken from
-	double PSFTable[2][2] = { { 2.5, 2.8 },{ 3.1, 3.5 } };
-
-	int ConstrControl = GetConstrControl();
-	int ManufControl = GetManufControl();
-
-	return PSFTable[ConstrControl][ManufControl];
-}
-
-const float DVLR::GetUltLoad()
-{
-	GetLoads(); // populate our load array with eccentric and concentric dead and live loads
-	GetSelfWeight();
-	GetSpreadLoad();
-	// Factor them up
-	// Check the spread (and if they spread)
-	// Determine the total load
-
-	return 0.0f;
-}
-
-const float DVLR::GetTeff()
+const double DVLR::GetTeff()
 {
 	// Ask the user for the thickness of each leaf
-	for (int i = 1; i <= 2; i++) // Hard number of 2 used as this will always check a cavity wall!
+	for (int i = 0; i <= 1; i++) // Hard number of 2 used as this will always check a cavity wall!
 	{
-		std::cout << "Enter the thickness of leaf " << i << ", t" << i << " [mm]:  ";
+		std::cout << "Enter the thickness of leaf " << i+1 << ", t" << i+1 << " [mm]:  ";
 		std::cin >> TLeaf[i];
 		std::cin.ignore(256, '\n'); // Clear the input buffer of the first 256 characters and newline characters
 									// TODO pass input into function that checks if value is a number and over 0 => !CheckValidInput(TLeaf[i]); in a do-while loop
 	}
 
-	float t3 = (2 * (TLeaf[1] + TLeaf[2])) / 3;	// Effective thickness of two leaves
-	float t4 = (TLeaf[1] >= TLeaf[2]) ? TLeaf[1] : TLeaf[2]; // Greatest thickness out of both leaves
+	double t3 = (2 * (TLeaf[0] + TLeaf[1])) / 3;	// Effective thickness of two leaves
+	double t4 = (TLeaf[0] >= TLeaf[1]) ? TLeaf[0] : TLeaf[1]; // Greatest thickness out of both leaves
 
 	if (t4 >= t3)
 	{
@@ -78,7 +52,7 @@ const float DVLR::GetTeff()
 	}
 }
 
-const float DVLR::GetHeff()
+const double DVLR::GetHeff()
 {
 
 	std::cout << "Please input the height of the Wall [mm]:  ";
@@ -89,7 +63,7 @@ const float DVLR::GetHeff()
 	return HWall*RestraintFactor;
 }
 
-const float DVLR::GetRestraint()
+const double DVLR::GetRestraint()
 {
 	std::string Restraint;
 	bool IsValid = true;
@@ -118,15 +92,15 @@ const float DVLR::GetRestraint()
 		}
 		std::cin.ignore(1000, '\n'); // Clear input buffer to prevent errors
 	} while (!IsValid);
-	return 0.0;
+	std::exit(-1);
 }
 
-void DVLR::IsSlendernessOK(float& SR)
+void DVLR::IsSlendernessOK(double& SR)
 {
 	if (SR >= 27)
 	{
-		std::cout << "SR greater than 27 is outside the scope of BS 5628-1:2005." << std::endl << std::endl;
-		std::cout << "Program Terminated" << std::endl << std::endl;
+		std::cout << "A SR greater than 27 is outside the scope of BS 5628-1:2005." << std::endl << std::endl;
+		std::cout << "Program Terminated." << std::endl << std::endl;
 		SR = 0;
 		std::exit(-1);
 	}
@@ -134,6 +108,21 @@ void DVLR::IsSlendernessOK(float& SR)
 	{
 		std::cout << "SR < 27 and therefore within the scope of BS 5628-1." << std::endl << std::endl;
 	}
+}
+
+// Returns the safety factor based on text input
+const double DVLR::GetSafetyFactor()
+{
+	std::cout << "Determine the Partial Safety Factor :" << std::endl;
+
+	// Defines the table that the Partial Safety Factor is taken from
+	double PSFTable[2][2] = { { 2.5, 2.8 },{ 3.1, 3.5 } };
+
+	int ConstrControl = GetConstrControl();
+	int ManufControl = GetManufControl();
+
+
+	return PSFTable[ConstrControl][ManufControl];
 }
 
 int DVLR::GetConstrControl()
@@ -193,6 +182,19 @@ int DVLR::GetManufControl()
 	std::exit(-1);
 }
 
+Wult DVLR::GetUltLoad()
+{
+	GetLoads(); // populate our load array with eccentric and concentric dead and live loads
+	GetUltLineLoad(Load);
+	GetSelfWeight();
+	WultLoad = GetSpreadLoad();
+
+	std::cout << "Ultimate line load in Leaf 1: " << WultLoad.Leaf1 << " kN/m" << std::endl;
+	std::cout << "Ultimate line load in Leaf 2: " << WultLoad.Leaf2 << " kN/m" << std::endl;
+
+	return WultLoad;
+}
+
 void DVLR::GetLoads()
 {
 int x = 0; // access to load array
@@ -220,56 +222,109 @@ return;
 const void DVLR::GetSelfWeight()
 {
 	std::cout << "\nPlease enter the self weight of masonry," << std::endl;
-	for(int i=1 ; i <= 2 ; i++)
+	for(int i = 0 ; i <= 1 ; i++)
 	{
-		std::cout << "  Leaf " << i << ": ";
+		std::cout << "  Leaf " << i+1 << " [kN/m^3]: ";
 		std::cin >> UnitWeight[i];
 	}
 	PtFourH = 0.4*HWall/1000;
 
 	std::cout << "Therefore self weight at 0.4H, " << PtFourH << "m," << std::endl;
 
-	for(int i = 1 ; i <= 2 ; i++)
+	for(int i = 0 ; i <= 1 ; i++)
 	{
 		SelfWeight[i] = UnitWeight[i]*(PtFourH)*(TLeaf[i]/1000);
-		std::cout << "Leaf " << i << ": " << SelfWeight[i] << "kN/m" << std::endl;
+		std::cout << "Leaf " << i+1 << ": " << SelfWeight[i] << "kN/m" << std::endl;
 	}
 	return;
 }
 
-const float DVLR::GetSpreadLoad() // TODO add returns
+Wult DVLR::GetUltLineLoad(double* Load)
 {
+	LoadOverWall.Leaf1 = (1.4*(Load[0] + Load[2]))+(1.6*(Load[1]+Load[3]));
+	LoadOverWall.Leaf2 = (1.4*(Load[4] + Load[6])) + (1.6*(Load[5] + Load[7]));
+	/// Temporary to view results
+	std::cout << "Ultimate line load over wall, Leaf 1: " << LoadOverWall.Leaf1 << "kN/m" << std::endl;
+	std::cout << "Ultimate Line load over wall, Leaf 2: " << LoadOverWall.Leaf2 << "kN/m" << std::endl;
+	return LoadOverWall;
+}
+
+Wult DVLR::GetSpreadLoad()
+{
+	Wult WLoad;
+
+	// Get the opening widths, bearing lengths and load spreads.
 	GetOpenings();
-	if(OpWidth[1] != 0 && OpWidth[1] != 0)
+	// If both opening widths are not zero
+	if(OpWidth[0] != 0 && OpWidth[1] != 0)
 	{
-		if(Spread[1]+Spread[2] >= L)
+		// and if both of the load spreads lap
+		if(Spread[0]+Spread[1] >= L)
 		{
-			// function to get double lapped line load
+			std::cout << "Both load spreads lap." << std::endl;
+			std::cout << "Considering the load concentration from both load spreads lapping." << std::endl;
+			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
+			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
 		}
-		// else function to get greatest single lapped line load
+		// else return the greatest of the singly lapped loads
+		else
+		{
+			std::cout << "Load spreads do not lap." << std::endl;
+			std::cout << "Considering the load concentration from the greatest load concentration." << std::endl;
+			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
+			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+		}
 	}
-	else if(OpWidth[1] != 0 ||OpWidth[2] != 0 )
+	// if one width is not zero, return the singly lapped load
+	else if(OpWidth[0] != 0 ||OpWidth[1] != 0 )
 	{
-		//function to get greatest single lapped line load
+		std::cout << "Considering a load concentration from the spread load." << std::endl;
+		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
+		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
 	}
-	return 0.f;
+	// else both openings must be zero, simply calculate the ultimate line load
+	else
+	{
+		std::cout << "No load spread due to concentrated loads." << std::endl;
+		std::cout << "Considering the ultimate load at 0.4H from the top of the wall." << std::endl;
+		WLoad.Leaf1 = (1.4*SelfWeight[0]) + LoadOverWall.Leaf1;
+		WLoad.Leaf2 = (1.4*SelfWeight[1]) + LoadOverWall.Leaf2;
+	}
+	return WLoad;
 }
 
 void DVLR::GetOpenings()
 {
 	std::cout << "\nPlease enter the length of wall considered, L [mm]:  ";
 	std::cin >> L;
-	for(int i = 1 ; i <= 2 ; i++)
+	for(int i = 0 ; i <= 1 ; i++)
 	{
-		std::cout << "Please enter the width of opening " << i << " [mm]:  ";
+		std::cout << "Please enter the width of opening " << i+1 << " [mm]:  ";
 		std::cin >> OpWidth[i];
 		if(OpWidth[i] != 0)
 		{
-			std::cout << "Please enter the bearing length of the member forming opening " << i << " [mm]:  ";
+			std::cout << "Please enter the bearing length of the member forming opening " << i+1 << " [mm]:  ";
 			std::cin >> BLength[i];
 			Spread[i] = {BLength[i]+(PtFourH*1000)};
-			std::cout << "Load spread length = " << Spread[i] << "mm" << std::endl;
 		}
 	}
 	return;
+}
+
+const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, double* OpenWidth )
+{
+	if (OpenWidth[0] >= OpenWidth[1])
+	{
+		return ((UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[0]/1000)) / (2 * (Spread[0]/1000))));
+	}
+	else
+	{
+		return ((UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000))));
+	}
+}
+
+const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double* OpenWidth )
+{
+	return (UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000)))
+					+ ((UltLoad*(OpenWidth[0]/1000)) / (2 * (Spread[0]/1000)));
 }
