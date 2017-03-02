@@ -42,9 +42,14 @@ void DVLR::StartProgram()
 	PSF = GetSafetyFactor();
 	std::cout << "And therefore the Partial Safety Factor to be adopted, PSF = " << PSF << std::endl << std::endl;
 
-	GetUltLoad();
-	/*Wall.GetBeta();
-	Wall.GetSAF();
-	Wall.GetMinFk(); */
+	WultLoad = Wall.GetUltLoad();
+	std::cout << "Ultimate line load in Leaf 1: " << WultLoad.Leaf1 << " kN/m" << std::endl;
+	std::cout << "Ultimate line load in Leaf 2: " << WultLoad.Leaf2 << " kN/m" << std::endl;
+
+	Beta = GetBeta();
+	std::cout << "Capacity Reduction Factor to Leaf 1, Beta: " << Beta.Leaf1 << std::endl;
+	std::cout << "Capacity Reduction Factor to Leaf 2, Beta: " << Beta.Leaf2 << std::endl;
+	//GetSAF();
+	//GetMinFk(); 
 	return;
 }
