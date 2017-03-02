@@ -48,13 +48,15 @@ public: // Methods
 		void GetOpenings();
 		Wult GetSpreadLoad();
 		const void GetSelfWeight();
+		//const Wult GetSelfWeightOverOpening(double*, double, double);
 		const double GetSingleLapLoad(double, double, double*);
 		const double GetDoubleLapLoad(double, double, double*);
 		Wult GetUltLineLoad(double*);
 
-	const double GetBeta();
-	const double GetSAF(double&, double&);
-	const double GetMinFk();
+	const Wult GetBeta();
+		const double GetEx(double, double, double, double, double);
+	//const double GetSAF(double&, double&);
+	//const double GetMinFk();
 
 	// Sub-member functions (i.e. members called from the main members above and not from main
 
@@ -77,9 +79,11 @@ private: // Members
 	/// Length of wall considered
 	double L = 0;
 	/// Opening width
-	double OpWidth[2] = {0, 0};
+	double OpWidth[2] = { 0, 0 };
 	/// Bearing length
-	double BLength[2] = {0, 0};
+	double BLength[2] = { 0, 0 };
+	/// Height to the top of the opening
+	//double OpHeight[2] = { 0, 0 };
 	/// Slenderness Ratio
 	double SR = 0;
 	/// Partial Safety Factor
@@ -97,14 +101,21 @@ private: // Members
 		0  // 7. Leaf 2 Concentric, Live load
 	};
 	/// Masonry Self weight
-	double UnitWeight[2] = {0, 0};
-	double SelfWeight[2] = {0, 0};
+	double UnitWeight[2] = { 0 , 0 };
+	double SelfWeight[2] = { 0 , 0 };
+	//Wult SelfWeightOverOpening[2] = { 0 , 0 };
 	/// Ultimate Load
 	Wult WultLoad;
 	/// Factored load over wall w/o wall self weight and load concentration
 	Wult LoadOverWall;
 	/// Load Spread Length, assumed at 45 degrees from edge of member bearing
 	double Spread[2] = {0, 0};
+	/// Loaded Eccentricity
+	double Ex[2] = { 0, 0 };
+	double Ea[2] = { 0, 0 };
+	double Et[2] = { 0, 0 };
+	double Em[2] = { 0, 0 };
+	Wult Beta;
 
 };
 

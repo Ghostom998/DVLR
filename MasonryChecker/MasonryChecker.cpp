@@ -6,10 +6,7 @@
 #include <iostream>
 #include <string>
 
-DVLR::DVLR()
-{
-	// Default Constructor
-}
+DVLR::DVLR() {/* Default Constructor*/}
 
 const double DVLR::GetSlenderness()
 {
@@ -110,21 +107,6 @@ void DVLR::IsSlendernessOK(double& SR)
 	}
 }
 
-// Returns the safety factor based on text input
-const double DVLR::GetSafetyFactor()
-{
-	std::cout << "Determine the Partial Safety Factor :" << std::endl;
-
-	// Defines the table that the Partial Safety Factor is taken from
-	double PSFTable[2][2] = { { 2.5, 2.8 },{ 3.1, 3.5 } };
-
-	int ConstrControl = GetConstrControl();
-	int ManufControl = GetManufControl();
-
-	return PSFTable[ConstrControl][ManufControl];
-}
-
-// Returns the safety factor based on text input
 const double DVLR::GetSafetyFactor()
 {
 	std::cout << "Determine the Partial Safety Factor :" << std::endl;
@@ -139,6 +121,7 @@ const double DVLR::GetSafetyFactor()
 	return PSFTable[ConstrControl][ManufControl];
 }
 
+// Future suggestion: as GetConstrControl & GetManufControl take in the same values and return the same values, call these as one function with different arguments.
 int DVLR::GetConstrControl()
 {
 	std::string ConstrControl = "";
@@ -198,20 +181,18 @@ int DVLR::GetManufControl()
 
 Wult DVLR::GetUltLoad()
 {
+	std::cout << "Determine the ultimate loading:" << std::endl;
 	GetLoads(); // populate our load array with eccentric and concentric dead and live loads
 	GetUltLineLoad(Load);
 	GetSelfWeight();
-	WultLoad = GetSpreadLoad();
-
-	std::cout << "Ultimate line load in Leaf 1: " << WultLoad.Leaf1 << " kN/m" << std::endl;
-	std::cout << "Ultimate line load in Leaf 2: " << WultLoad.Leaf2 << " kN/m" << std::endl;
-
-	return WultLoad;
+	Wult WultSpreadLoad = GetSpreadLoad();
+	return WultSpreadLoad;
 }
 
 void DVLR::GetLoads()
 {
 int x = 0; // access to load array
+
 std::cout << "Please enter the applied line loading at the top of the wall:" << std::endl;
 
 for(int i = 1 ; i <= 2 ; i++)
@@ -253,6 +234,17 @@ const void DVLR::GetSelfWeight()
 	return;
 }
 
+// Get SW over opening
+/*const Wult DVLR::GetSelfWeightOverOpening(double* SWeight, double HeightofWall, double OpeningHeight)
+{
+	Wult SWOO;
+
+	SWOO.Leaf1 = SWeight[0] * (HeightofWall - OpeningHeight);
+	SWOO.Leaf2 = SWeight[1] * (HeightofWall - OpeningHeight);
+
+	return SWOO;
+}*/
+
 Wult DVLR::GetUltLineLoad(double* Load)
 {
 	LoadOverWall.Leaf1 = (1.4*(Load[0] + Load[2]))+(1.6*(Load[1]+Load[3]));
@@ -267,6 +259,7 @@ Wult DVLR::GetSpreadLoad()
 {
 	Wult WLoad;
 
+	std::cout << "\nConsider load concentrations due to openings:";
 	// Get the opening widths, bearing lengths and load spreads.
 	GetOpenings();
 	// If both opening widths are not zero
@@ -307,6 +300,7 @@ Wult DVLR::GetSpreadLoad()
 	return WLoad;
 }
 
+// Future suggestion: create an struct for openings including width, height and bearing length and simply declare the openings as an array i.e. Opening[2] for looping purposes
 void DVLR::GetOpenings()
 {
 	std::cout << "\nPlease enter the length of wall considered, L [mm]:  ";
@@ -319,13 +313,18 @@ void DVLR::GetOpenings()
 		{
 			std::cout << "Please enter the bearing length of the member forming opening " << i+1 << " [mm]:  ";
 			std::cin >> BLength[i];
+
+			/*std::cout << "Please enter the height to the top of the opening " << i + 1 << " [mm]:  ";
+			std::cin >> OpHeight[i];*/
+
 			Spread[i] = {BLength[i]+(PtFourH*1000)};
+			//SelfWeightOverOpening[i] = GetSelfWeightOverOpening(SelfWeight, HWall, OpHeight[i]);
 		}
 	}
 	return;
 }
 
-const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, double* OpenWidth )
+const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, double* OpenWidth)
 {
 	if (OpenWidth[0] >= OpenWidth[1])
 	{
@@ -333,12 +332,59 @@ const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, double* O
 	}
 	else
 	{
-		return ((UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000))));
+		return ((UltLoad + (1.4*Selfweight)) + (UltLoad *(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000)));
 	}
 }
 
-const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double* OpenWidth )
+const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double* OpenWidth)
 {
-	return (UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000)))
-					+ ((UltLoad*(OpenWidth[0]/1000)) / (2 * (Spread[0]/1000)));
+	return (UltLoad + (1.4*Selfweight)) + (UltLoad *(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000))
+					+ (UltLoad *(OpenWidth[0]/1000)) / (2 * (Spread[0]/1000));
+}
+
+const Wult DVLR::GetBeta()
+{
+	std::cout << "\nConsider a load capacity reduction due to slenderness:" << std::endl;
+	Wult B;
+	int x = 0;
+	for (int i = 0; i <= 1; i++)
+	{
+		Ex[i] = GetEx(Load[x], Load[x + 1], Load[x + 2], Load[x + 3], TLeaf[i]);
+		x += 4;
+		std::cout << "Loaded eccentricity of Leaf " << i + 1 << ": " << Ex[i] << " mm" << std::endl;
+	}
+	std::cout << std::endl;
+	// Accidental Eccentricity
+	for (int i = 0; i <= 1; i++)
+	{
+		Ea[i] = TLeaf[i]*(((SR*SR)/2400)-0.015);
+		std::cout << "Accidental eccentricity of Leaf " << i + 1 << ": " << Ea[i] << " mm" << std::endl;
+	}
+	std::cout << std::endl;
+	// Total Eccentricity at 04H from the top of the wall
+	for (int i = 0; i <= 1; i++)
+	{
+		Et[i] = (0.6*Ex[i]) + Ea[i];
+		std::cout << "Total Eccentricity at 0.4H from the top of Leaf " << i + 1 << ": " << Et[i] << " mm" << std::endl;
+	}
+	std::cout << std::endl;
+	// Maximum Eccentricity
+	for (int i = 0; i <= 1; i++)
+	{
+		Em[i] = (Ex[i] > Et[i]) ? Ex[i] : Et[i];
+		std::cout << "Maximum Eccentricity of Leaf " << i + 1 << ": " << Em[i] << " mm" << std::endl;
+	}
+	std::cout << std::endl;
+
+	B.Leaf1 = 1.1*(1 - ((2 * Em[0]) / TLeaf[0]));
+	B.Leaf2 = 1.1*(1 - ((2 * Em[1]) / TLeaf[1]));
+
+	return B;
+}
+
+const double DVLR::GetEx(double EccDL, double EccLL, double CncDL, double CncLL, double LeafThickness)
+{
+	double Ecc = ((EccDL + EccLL)*(LeafThickness / 6)) / (EccDL + EccLL + CncDL + CncLL); // e = M/N
+	double EccMin = 0.05*LeafThickness;
+	return (Ecc > EccMin) ? Ecc : EccMin;
 }
