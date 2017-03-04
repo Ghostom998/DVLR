@@ -8,6 +8,7 @@ struct Wult
 {
 	double Leaf1 = 0;
 	double Leaf2 = 0;
+	std::string Message = "";
 };
 
 // Required Fk per leaf. Allows functions to return two values. Values initialised to 0
@@ -55,8 +56,11 @@ public: // Methods
 
 	const Wult GetBeta();
 		const double GetEx(double, double, double, double, double);
-	//const double GetSAF(double&, double&);
-	//const double GetMinFk();
+
+	const Wult GetSmallAreaFactor();
+		const double GetSAF(double&, double&);
+
+	const double GetMinFk(double&, double&, double&, double&, double&);
 
 	// Sub-member functions (i.e. members called from the main members above and not from main
 
@@ -115,7 +119,12 @@ private: // Members
 	double Ea[2] = { 0, 0 };
 	double Et[2] = { 0, 0 };
 	double Em[2] = { 0, 0 };
+	/// Capacity reduction factor
 	Wult Beta;
+	/// Small area factor
+	Wult SAF;
+	/// Minimum required masonry strength
+	Fk MinFk;
 
 };
 

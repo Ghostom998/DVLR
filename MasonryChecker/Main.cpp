@@ -49,7 +49,14 @@ void DVLR::StartProgram()
 	Beta = GetBeta();
 	std::cout << "Capacity Reduction Factor to Leaf 1, Beta: " << Beta.Leaf1 << std::endl;
 	std::cout << "Capacity Reduction Factor to Leaf 2, Beta: " << Beta.Leaf2 << std::endl;
-	//GetSAF();
-	//GetMinFk(); 
+	
+	SAF = GetSmallAreaFactor(); // Messages inside function
+
+	std::cout << "Determine Minimum required masonry strength:" << std::endl;
+	MinFk.Leaf1 = GetMinFk(PSF, WultLoad.Leaf1,  Beta.Leaf1,  SAF.Leaf1, TLeaf[0]);
+	MinFk.Leaf2 = GetMinFk(PSF, WultLoad.Leaf2, Beta.Leaf2, SAF.Leaf2, TLeaf[1]);
+	std::cout << "Minimum required masonry strength to Leaf 1, Fk = " << MinFk.Leaf1 << "N/mm2" << std::endl;
+	std::cout << "Minimum required masonry strength to Leaf 2, Fk = " << MinFk.Leaf2 << "N/mm2" << std::endl;
+	
 	return;
 }
