@@ -73,7 +73,7 @@ const double DVLR::GetHeff()
 	do
 	{
 		std::cout << "Please input the height of the Wall [mm]:  ";
-		std::cin >> HWall; // TODO pass input into function that checks if value is a number and over 0 => !CheckValidInput(TLeaf[i]); in a do-while loop
+		std::cin >> HWall;
 		std::cin.ignore(1000, '\n');
 		
 		if (!std::cin) // or if(cin.fail())
@@ -107,14 +107,17 @@ const double DVLR::GetRestraint()
 
 		if (Restraint == "Simple" || Restraint == "simple" || Restraint == "S" || Restraint == "s")
 		{
+			RestraintCondition = "simple";
 			return 1.0;
 		}
 		else if (Restraint == "Partial" || Restraint == "partial" || Restraint == "P" || Restraint == "p")
 		{
+			RestraintCondition = "partial";
 			return 0.875;
 		}
 		else if (Restraint == "Enhanced" || Restraint == "enhanced" || Restraint == "E" || Restraint == "e")
 		{
+			RestraintCondition = "enhanced";
 			return 0.75;
 		}
 		else
@@ -170,10 +173,12 @@ int DVLR::GetConstrControl()
 
 		if (ConstrControl == "Normal" || ConstrControl == "normal" || ConstrControl == "N" || ConstrControl == "n")
 		{
+			ConstructionControl = "normal";
 			return 1;
 		}
 		else if (ConstrControl == "Special" || ConstrControl == "special" || ConstrControl == "S" || ConstrControl == "s")
 		{
+			ConstructionControl = "special";
 			return 0;
 		}
 		else
@@ -198,10 +203,12 @@ int DVLR::GetManufControl()
 
 		if (ManufControl == "Normal" || ManufControl == "normal" || ManufControl == "N" || ManufControl == "n")
 		{
+			ManufactureControl = "normal";
 			return 1;
 		}
 		else if (ManufControl == "Special" || ManufControl == "special" || ManufControl == "S" || ManufControl == "s")
 		{
+			ManufactureControl = "special";
 			return 0;
 		}
 		else
@@ -236,8 +243,8 @@ void DVLR::GetLoads()
 		std::cout << "Leaf " << i << ",";
 		for (int j = 1; j <= 2; j++)
 		{
-			if (j == 1) { std::cout << "\n  eccentric, "; }
-			else { std::cout << "  concentric, "; }
+			if (j == 1) { std::cout << "\n  Eccentric, "; }
+			else { std::cout << "  Concentric, "; }
 			for (int k = 1; k <= 2; k++)
 			{
 				bool IsValid = true;
@@ -255,7 +262,8 @@ void DVLR::GetLoads()
 						std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
 																							// next, request user reinput
 						IsValid = false;
-						std::cout << "Invalid input, please try again." << std::endl;
+						if (k == 1) { std::cout << "Invalid input, please try again."; }
+						else { std::cout << "Invalid input, please try again.\n"; }
 					}
 					else
 					{
@@ -271,7 +279,7 @@ void DVLR::GetLoads()
 
 const void DVLR::GetSelfWeight()
 {
-	std::cout << "\nPlease enter the self weight of masonry," << std::endl;
+	std::cout << "\nPlease enter the self-weight of masonry," << std::endl;
 	for (int i = 0; i <= 1; i++)
 	{
 		bool IsValid = true;
@@ -298,7 +306,7 @@ const void DVLR::GetSelfWeight()
 	}
 	PtFourH = 0.4*HWall / 1000;
 
-	std::cout << "Therefore self weight at 0.4H, " << PtFourH << "m," << std::endl;
+	std::cout << "Therefore, the self-weight at 0.4H => " << PtFourH << "m," << std::endl;
 
 	for (int i = 0; i <= 1; i++)
 	{
@@ -308,7 +316,7 @@ const void DVLR::GetSelfWeight()
 	return;
 }
 
-// Get SW over opening
+// TODO Get SW over opening
 /*const Wult DVLR::GetSelfWeightOverOpening(double* SWeight, double HeightofWall, double OpeningHeight)
 {
 Wult SWOO;
@@ -393,7 +401,7 @@ void DVLR::GetOpenings()
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
 																				// next, request user reinput
 			IsValid = false;
-			std::cout << "Invalid input, please try again." << std::endl;
+			std::cout << "Invalid input, please try again.";
 		}
 		else
 		{

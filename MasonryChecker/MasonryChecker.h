@@ -62,9 +62,36 @@ public: // Methods
 
 	const double GetMinFk(double&, double&, double&, double&, double&);
 
-	// Sub-member functions (i.e. members called from the main members above and not from main
+	//TODO Method to determine minFk based on bearing beneath the lintel const CheckLintelBearing();  
 
-	//	bool CheckValidInput(); commented out until implemented
+// Methods to print *.txt output
+
+	// PrintToFile() will take the file name, run the sub methods, run error checks and close the file at the end.
+	// Each sub method will write to the file at the end of its method 
+	// We will have PrintToFile() display if the file write was successfully or warn that it wasnt. We may ask the user if they wish to TryAgain?
+	// The file will then exit to main which will return 0;
+	const int PrintToFile();
+
+		// Print the introduction section
+		const std::string PrintIntro(std::string);
+
+		// Print the slenderness ratio and its components
+		const std::string PrintSlenderness();
+
+		// Print the safety factor and quality control
+		const std::string PrintPSF();
+
+		// Print the loadings openings and concentrated loads
+		const std::string PrintLoadings();
+			const std::string PrintLoadingsTopWall();
+
+		// Print the eccentricity and the capacity reduction factor
+		const std::string PrintEccentricity();
+
+
+		const std::string PrintMinFk();
+
+
 
 private: // Members
 
@@ -74,6 +101,8 @@ private: // Members
 	std::string TeffEquation = "";
 	/// Wall hieght
 	double HWall = 0;
+	/// Restraint Condition i.e. Enhanced for txt output
+	std::string RestraintCondition = "";
 	/// Heff Restraint Factor
 	double RestraintFactor = 0;
 	/// Wall effective hieght
@@ -87,11 +116,15 @@ private: // Members
 	/// Bearing length
 	double BLength[2] = { 0, 0 };
 	/// Height to the top of the opening
-	//double OpHeight[2] = { 0, 0 };
+	// double OpHeight[2] = { 0, 0 };
 	/// Slenderness Ratio
 	double SR = 0;
 	/// Partial Safety Factor
 	double PSF = 0;
+	/// Construction control
+	std::string ConstructionControl = "";
+	/// Manufacture Control
+	std::string ManufactureControl = "";
 	/// DL, LL, eccentric, concentric, leaf 1, leaf 2
 	double Load[8] =
 	{

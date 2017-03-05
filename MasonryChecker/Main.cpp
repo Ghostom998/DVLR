@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MasonryChecker.h"
 #include <iostream>
+#include <limits>
 //using namespace std;
 
 /*
@@ -14,14 +15,27 @@
 */
 
 void Intro();
+bool AskToSaveFile();
 DVLR Wall; // A wall object in the DVLR class
 
 int main()
 {
+	bool SaveFile = false;
+
 	Intro();
 	Wall.StartProgram();
-	// TODO include function that produces txt file output
-	system("pause");
+
+	// User option to save file
+	SaveFile = AskToSaveFile();
+	if (SaveFile)
+	{
+		// Writes to file
+		Wall.PrintToFile();
+	}
+
+	// Pauses the system for debugging purposes
+	std::cout << "Press ENTER to continue..." << std::flush;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	return 0;
 }
 
@@ -59,4 +73,19 @@ void DVLR::StartProgram()
 	std::cout << "Minimum required masonry strength to Leaf 2, Fk = " << MinFk.Leaf2 << "N/mm2" << std::endl;
 	
 	return;
+}
+
+bool AskToSaveFile()
+{
+	// Flushes the input buffer
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+	std::cout << "\nDo you want to save the output (y/n)? ";
+	std::string Response = "";
+	std::getline(std::cin, Response);
+	std::cout << std::endl;
+
+	// Returns the bool true if the first letter begins 
+	// with the upper or lowercase "y" else returns false.
+	return (Response[0] == 'y') || (Response[0] == 'Y');
 }
