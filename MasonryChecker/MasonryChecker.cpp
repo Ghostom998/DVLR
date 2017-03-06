@@ -356,6 +356,8 @@ Wult DVLR::GetSpreadLoad()
 			std::cout << WLoad.Message << std::endl;
 			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+			// Tells the print output which case to print i.e. No load spread
+			Case = 2;
 		}
 		// else return the greatest of the singly lapped loads
 		else
@@ -365,6 +367,8 @@ Wult DVLR::GetSpreadLoad()
 			std::cout << WLoad.Message << std::endl;
 			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+			// Tells the print output which case to print i.e. No load spread
+			Case = 3;
 		}
 	}
 	// if one width is not zero, return the singly lapped load
@@ -374,6 +378,8 @@ Wult DVLR::GetSpreadLoad()
 		std::cout << WLoad.Message << std::endl;
 		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+		// Tells the print output which case to print i.e. No load spread
+		Case = 4;
 	}
 	// else both openings must be zero, simply calculate the ultimate line load
 	else
@@ -382,6 +388,8 @@ Wult DVLR::GetSpreadLoad()
 		WLoad.Message.append( "\nConsidering the ultimate load at 0.4H from the top of the wall.");
 		WLoad.Leaf1 = (1.4*SelfWeight[0]) + LoadOverWall.Leaf1;
 		WLoad.Leaf2 = (1.4*SelfWeight[1]) + LoadOverWall.Leaf2;
+		// Tells the print output which case to print i.e. No load spread
+		Case = 1;
 	}
 	return WLoad;
 }

@@ -1,0 +1,59 @@
+MasonryChecker. 
+by Thomas Roberts, CWA.
+
+A program to consider the vertical load design of cavity masonry in accordance with BS 5628-1:2005.
+Wall Referenced: Wall A1
+
+Consider the Slenderness Ratio:
+Thickness of Leaf 1, t1: 140.00mm
+Thickness of Leaf 2, t2: 100.00mm
+Height of Wall, H: 3500.00mm
+Restraint condition at the top of the wall is enhanced.
+Restraint factor to clause 28.3.1.1., RF: 0.75
+Effective Thickness, Teff = 2(t1 + t2) / 3 = 160.00mm
+Effective Height, Heff = RF*H = 0.75*3500.00 = 2625.00mm
+Hence,
+Slenderness Ratio, SR = Heff/Teff = 2625.00/160.00 = 16.41 [-]
+
+Consider a Partial Safety Factor:
+Construction control is normal.
+Manufacture control is special.
+Hence,
+Partial Safety from table 4a, PSF: 3.1 [-]
+
+Consider the characteristic loading at the top of the wall: 
+Leaf 1,
+  Eccentric, 
+	Dead load: 15.00kN/m
+	Live load: 12.00kN/m
+  Concentric, 
+	Dead load: 52.00kN/m
+	Live load: 36.00kN/m
+Leaf 2,
+  Eccentric, 
+	Dead load: 0.00kN/m
+	Live load: 0.00kN/m
+  Concentric, 
+	Dead load: 25.00kN/m
+	Live load: 0.00kN/m
+Selfweight of Leaf 1, Ymas,Leaf1: 15.00kN/m^3
+Selfweight of Leaf 2, Ymas,Leaf2: 20.00kN/m^3
+
+Wall Length & Openings:
+Length of Wall, L: 1500.00mm
+Opening Width, OpWidth,Leaf1: 1200.00mm
+Bearing Length of member supporting Opening, BLength,Leaf1: 150.00mm
+Opening Width, OpWidth,Leaf2: 910.00mm
+Bearing Length of member supporting Opening, BLength,Leaf2: 100.00mm
+
+Ultimate Line Load at the top of the wall = 1.4(Ecc,DL + Conc,DL) + 1.6(Ecc,LL + Conc,LL)
+Wult,TopOfWall,Leaf 1 = 1.4(15.00kN/m + 52.00kN/m) + 1.6(12.00kN/m + 36.00kN/m) = 170.60kN/m
+Wult,TopOfWall,Leaf 2 = 1.4(0.00kN/m + 25.00kN/m) + 1.6(0.00kN/m + 0.00kN/m) = 35.00kN/m
+
+SelfWeight at 0.4H from the top of the wall:
+0.4H = 0.4*3.50m = 1.40m
+SW,0.4H = 0.4H*t*Ymas
+SW,0.4H,Leaf1 = 15.00kN/m^3 * (140.00 / 1000)m * 1.40m = 2.94kN/m
+SW,0.4H,Leaf2 = 20.00kN/m^3 * (140.00100.00 / 1000)m * 1.40m = 2.80kN/m
+
+

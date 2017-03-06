@@ -84,6 +84,10 @@ public: // Methods
 		// Print the loadings openings and concentrated loads
 		const std::string PrintLoadings();
 			const std::string PrintLoadingsTopWall();
+			const std::string PrintOpenings();
+			const std::string PrintUltLineLoadTopWall();
+			const std::string PrintSelfWeight();
+			const std::string PrintLoadSpreadLength();
 
 		// Print the eccentricity and the capacity reduction factor
 		const std::string PrintEccentricity();
@@ -158,6 +162,9 @@ private: // Members
 	Wult SAF;
 	/// Minimum required masonry strength
 	Fk MinFk;
+
+	/// Numbered cases for Load spread calc output (.txt)
+	int Case = 0;
 
 };
 

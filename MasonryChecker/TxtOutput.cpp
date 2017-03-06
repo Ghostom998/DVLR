@@ -11,6 +11,7 @@ const int DVLR::PrintToFile()
 {
 	// Take a name for the file
 	std::string FileName = "";
+	std::cout << "Beware: Any txt file with the same name will be overwritten without warning." << std::endl;
 	std::cout << "Please enter the file name [*.txt]:  ";
 	std::getline(std::cin, FileName);
 
@@ -24,7 +25,7 @@ const int DVLR::PrintToFile()
 		std::cout << "Please check that the file does not already exist or is open." << std::endl;
 		std::exit(-1);
 	}
-	std::cout << "The file will be saved in the location of the executable *.exe file" << std::endl;
+	std::cout << "The file is saved in the location of the executable *.exe file" << std::endl;
 
 	// Get introduction text...
 	std::string Intro = PrintIntro(FileName);
@@ -75,14 +76,16 @@ const int DVLR::PrintToFile()
 	}
 }
 
+// A main print method
 const std::string DVLR::PrintIntro(std::string NameOfFile)
 {
-	std::string Introduction = "Masonry Design under Vertical Load.";
-	Introduction.append("\n\nConsider the vertical load resistance of a cavity masonry wall in accordance with BS 5628-1:2005.");
+	std::string Introduction = "MasonryChecker. \nby Thomas Roberts, CWA.";
+	Introduction.append("\n\nA program to consider the vertical load design of cavity masonry in accordance with BS 5628-1:2005.");
 	Introduction.append("\nWall Referenced: " + NameOfFile);
 	return Introduction;
 }
 
+// A main print method
 const std::string DVLR::PrintSlenderness()
 {
 	// Setup up string stream variables to round the inputs to 2 decimal places and convert numbers to strings
@@ -116,6 +119,7 @@ const std::string DVLR::PrintSlenderness()
 	return Slenderness;
 }
 
+// A main print method
 const std::string DVLR::PrintPSF()
 {
 	std::ostringstream SafetyFactor;
@@ -128,6 +132,7 @@ const std::string DVLR::PrintPSF()
 	return PartialSafetyFactor;
 }
 
+// A main print method
 const std::string DVLR::PrintLoadings()
 {
 	std::ostringstream UnitweightLeaf1;
@@ -136,46 +141,59 @@ const std::string DVLR::PrintLoadings()
 	UnitweightLeaf2 << std::fixed << std::setprecision(2) << UnitWeight[1];
 	std::ostringstream Length;
 	Length << std::fixed << std::setprecision(2) << L;
-	std::ostringstream OpeningWidth;
-	std::ostringstream BearingLength;
 
 	std::ostringstream PointFourH;
 	PointFourH << std::fixed << std::setprecision(1) << PtFourH;
 
+	// Print user input characteristic loads
 	std::string Loading = "\nConsider the characteristic loading at the top of the wall: ";
 	std::string LoadAtTopOfWall = PrintLoadingsTopWall();
 	Loading.append(LoadAtTopOfWall);
 	
 	Loading.append("\nSelfweight of Leaf 1, Ymas,Leaf1: " + UnitweightLeaf1.str() + "kN/m^3");
 	Loading.append("\nSelfweight of Leaf 2, Ymas,Leaf2: " + UnitweightLeaf2.str() + "kN/m^3");
+
+	Loading.append("\n\nWall Length & Openings:");
 	Loading.append("\nLength of Wall, L: " + Length.str() + "mm");
 
-	for (int i = 0; i <= 1; i++)
-	{
-		// If there is an opening
-		if (OpWidth[i] != 0)
-		{
-			// Assign the string streams
-			OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[i];
-			BearingLength << std::fixed << std::setprecision(2) << BLength[i];
+	// Print user input openings and bearing lengths
+	std::string Openings = PrintOpenings();
+	Loading.append(Openings);
 
-			// Write to file
-			Loading.append("\nOpening Width, OpWidth,Leaf" + std::to_string(i + 1) + ": " + OpeningWidth.str() + "mm");
-			Loading.append("\nBearing Length of member supporting Opening, BLength,Leaf" + std::to_string(i + 1) + ": " + BearingLength.str() + "mm");
+	// Print calc for Ult Line Load at top of wall
+	std::string UltLineLoadTopWall = PrintUltLineLoadTopWall();
+	Loading.append(UltLineLoadTopWall);
 
-			// Clears the string stream for the next usage
-			OpeningWidth.clear();
-			OpeningWidth.str("");
-			BearingLength.clear();
-			BearingLength.str("");
-		}
-	}
+	// Print calc for selfweight at 0.4H
+	std::string SelfWeight = PrintSelfWeight();
+	Loading.append(SelfWeight);
 
-	// TODO Display ult. line load at top of wall, selfweight of wall at 0.4H from top, load spread length, load laps and ultimate load
+	// Print Load Spread Length calcs
+	std::string LoadSpreadLength = PrintLoadSpreadLength();
+	Loading.append(LoadSpreadLength);
+
+	// TODO load laps within a case and ultimate load
 
 	return Loading;
 }
 
+// TODO Print Eccentricity results
+// A main print method
+const std::string DVLR::PrintEccentricity()
+{
+	std::string Eccentricity = "";
+	return Eccentricity;
+}
+
+// TODO Print minimum Fk required
+// A main print method
+const std::string DVLR::PrintMinFk()
+{
+	std::string MinFkResult = "";
+	return MinFkResult;
+}
+
+// A sub print method
 const std::string DVLR::PrintLoadingsTopWall()
 {
 	// Creates a string stream to convert loads from numbers to strings
@@ -210,16 +228,131 @@ const std::string DVLR::PrintLoadingsTopWall()
 	return LoadTopOfWall;
 }
 
-// TODO Print Eccentricity results
-const std::string DVLR::PrintEccentricity()
+// A sub print method
+const std::string DVLR::PrintOpenings()
 {
-	std::string Eccentricity = "";
-	return Eccentricity;
+	// Setup string streams
+	std::ostringstream OpeningWidth;
+	std::ostringstream BearingLength;
+	// Setup write string
+	std::string Opening = "";
+	for (int i = 0; i <= 1; i++)
+	{
+		// If there is an opening
+		if (OpWidth[i] != 0)
+		{
+			// Assign the string streams
+			OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[i];
+			BearingLength << std::fixed << std::setprecision(2) << BLength[i];
+
+			// Write to file
+			Opening.append("\nOpening Width, OpWidth,Leaf" + std::to_string(i + 1) + ": " + OpeningWidth.str() + "mm");
+			Opening.append("\nBearing Length of member supporting Opening, BLength,Leaf" + std::to_string(i + 1) + ": " + BearingLength.str() + "mm");
+
+			// Clears the string stream for the next usage
+			OpeningWidth.clear();
+			OpeningWidth.str("");
+			BearingLength.clear();
+			BearingLength.str("");
+		}
+	}
+	return Opening;
 }
 
-// TODO Print minimum Fk required
-const std::string DVLR::PrintMinFk()
+const std::string DVLR::PrintUltLineLoadTopWall()
 {
-	std::string MinFkResult = "";
-	return MinFkResult;
+	std::ostringstream EccDL;
+	std::ostringstream EccLL;
+	std::ostringstream ConcDL;
+	std::ostringstream ConcLL;
+
+	std::ostringstream UltLineLoad[2];
+	UltLineLoad[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
+	UltLineLoad[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
+
+	int x = 0;
+	std::string UltLineLoadTopWall = "\n\nUltimate Line Load at the top of the wall = 1.4(Ecc,DL + Conc,DL) + 1.6(Ecc,LL + Conc,LL)"; 
+	for (int i = 0; i <= 1; i++)
+	{
+		EccDL << std::fixed << std::setprecision(2) << Load[ x ];
+		EccLL << std::fixed << std::setprecision(2) << Load[x + 1];
+		ConcDL << std::fixed << std::setprecision(2) << Load[x + 2];
+		ConcLL << std::fixed << std::setprecision(2) << Load[x + 3];
+
+		UltLineLoadTopWall.append("\nWult,TopOfWall,Leaf " + std::to_string(i + 1) + " = 1.4(" + EccDL.str());
+		UltLineLoadTopWall.append("kN/m + " + ConcDL.str() + "kN/m) + 1.6(" + EccLL.str() + "kN/m + " );
+		UltLineLoadTopWall.append(ConcLL.str() + "kN/m) = " + UltLineLoad[i].str() + "kN/m");
+		
+		// Increments the load array access by 4 spaces for the next leaf
+		x += 4;
+
+		// Clears the string stream for the next usage
+		EccDL.clear();
+		EccDL.str("");
+		EccLL.clear();
+		EccLL.str("");
+		ConcDL.clear();
+		ConcDL.str("");
+		ConcLL.clear();
+		ConcLL.str("");
+	}
+	return UltLineLoadTopWall;
+}
+
+const std::string DVLR::PrintSelfWeight()
+{
+	std::ostringstream Height;
+	Height << std::fixed << std::setprecision(2) << (HWall / 1000);
+	std::ostringstream Pt4Height;
+	Pt4Height << std::fixed << std::setprecision(2) << PtFourH;
+	std::ostringstream Ymas;
+	std::ostringstream Swt;
+	std::ostringstream Thickness;
+
+	std::string SelfWt = "\n\nSelfWeight at 0.4H from the top of the wall:";
+	SelfWt.append("\n0.4H = 0.4*" + Height.str() + "m = " + Pt4Height.str() + "m");
+	SelfWt.append("\nSW,0.4H = 0.4H*t*Ymas");
+
+	for (int i = 0; i <= 1; i++)
+	{
+		// Create String stream
+		Ymas << std::fixed << std::setprecision(2) << UnitWeight[i];
+		Swt << std::fixed << std::setprecision(2) << SelfWeight[i];
+		Thickness << std::fixed << std::setprecision(2) << TLeaf[i];
+
+		// Write to file
+		SelfWt.append("\nSW,0.4H,Leaf" + std::to_string(i+1) + " = " + Ymas.str() + "kN/m^3 * (" + Thickness.str() + " / 1000)m * " + Pt4Height.str() + "m = " + Swt.str() + "kN/m");
+
+		// Clear String stream
+		Ymas.clear();
+		Ymas.str("");
+		Swt.clear();
+		Swt.str("");
+	}
+
+	return SelfWt;
+}
+
+const std::string DVLR::PrintLoadSpreadLength()
+{
+	// Create String Stream
+	std::ostringstream SpreadLength;
+	std::ostringstream BearingLength;
+	std::ostringstream Pt4Height;
+	Pt4Height << std::fixed << std::setprecision(2) << PtFourH;
+
+	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + 0.4H";
+	
+	for (int i = 0; i <= 1; i++)
+	{
+		SpreadLength << std::fixed << std::setprecision(2) << Spread[i];
+		BearingLength << std::fixed << std::setprecision(2) << BLength[i];
+
+		if (OpWidth[i] != 0)
+		{
+			LoadSpeadLength.append("\nLspread Opening" + std::to_string(i+1) + ""); // TODO finish
+		}
+	}
+
+	return LoadSpeadLength;
 }
