@@ -2,7 +2,7 @@
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string>		// Allows strings to be used
-#include <iomanip>      // std::setprecision
+#include <iomanip>      // std::setprecision -> allows us to reduce the decimal places in the string stream
 #include <sstream>		// String Stream: allows numbers to be cast as strings (i.e. to_string() )
 #include <fstream>		// File Stream: allows input/output to file
 
@@ -21,8 +21,8 @@ const int DVLR::PrintToFile()
 	if (!writer)
 	{
 		// ... Display an error message and close the program in error.
-		std::cout << "Error opening the file." << std::endl;
-		std::cout << "Please check that the file does not already exist or is open." << std::endl;
+		std::cout << "Error creating the file." << std::endl;
+		std::cout << "Please check that you have permission to save to the location or \ndo not already have a file of the same name open." << std::endl;
 		std::exit(-1);
 	}
 	std::cout << "The file is saved in the location of the executable *.exe file" << std::endl;
@@ -57,7 +57,7 @@ const int DVLR::PrintToFile()
 	// Write MinFk text to file
 	writer << MinFk << std::endl;
 
-	// close filestream
+	// After finishing writing we close the filestream
 	writer.close();
 
 	// If write  is not successfull
@@ -65,13 +65,14 @@ const int DVLR::PrintToFile()
 	{
 		// ... Display an error message and close the program in error.
 		std::cout << "Error writing to file." << std::endl;
-		std::cout << "Please check that the file does not already exist or is open." << std::endl;
+		std::cout << "Please check that you have permission to save to the location or \ndo not already have a file of the same name open." << std::endl;
 		std::exit(-1);
 	}
 	else
 	{
 		// Assumes that if there were no errors, then the file was written succesfully
 		std::cout << "\nThe program has written to the file without error." << std::endl;
+		// Exit to main()
 		return 0;
 	}
 }
@@ -149,7 +150,7 @@ const std::string DVLR::PrintLoadings()
 	std::string Loading = "\nConsider the characteristic loading at the top of the wall: ";
 	std::string LoadAtTopOfWall = PrintLoadingsTopWall();
 	Loading.append(LoadAtTopOfWall);
-	
+
 	Loading.append("\nSelfweight of Leaf 1, Ymas,Leaf1: " + UnitweightLeaf1.str() + "kN/m^3");
 	Loading.append("\nSelfweight of Leaf 2, Ymas,Leaf2: " + UnitweightLeaf2.str() + "kN/m^3");
 
@@ -172,7 +173,31 @@ const std::string DVLR::PrintLoadings()
 	std::string LoadSpreadLength = PrintLoadSpreadLength();
 	Loading.append(LoadSpreadLength);
 
-	// TODO load laps within a case and ultimate load
+	// Print Load Lap dependant on case - cases determined in DVLR::GetSpreadLoad()
+	// Note: Ultimate load determine here
+	std::string LoadLap = "";
+	switch(SpreadCaseStatus)
+	{
+	case SpreadCase::NoLoadSpread:
+		LoadLap = PrintNoLoadSpread();
+		break;
+	case SpreadCase::DblLoadSpreadLaps:
+		LoadLap = PrintDoubleLoadSpread();
+		break;
+	case SpreadCase::DblLoadSpreadDoesNOTLap:
+		LoadLap = PrintNotDoubleLoadSpread();
+		break;
+	case SpreadCase::SglLoadSpread:
+		LoadLap = PrintSingleSpread();
+		break;
+	default:
+			// if none of the above conditions were met then there was clearly an error
+			std::cerr << "Error printing load spread. Please try again." << std::endl;
+			std::cerr << "If the error persists, please report the error with the steps to reproduce it." << std::endl;
+			std::cerr << "Please \"create an issue\" in: https://github.com/Ghostom998/DVLR/issues" << std::endl;
+			std::exit(-1);
+	}
+	Loading.append(LoadLap);	
 
 	return Loading;
 }
@@ -271,7 +296,7 @@ const std::string DVLR::PrintUltLineLoadTopWall()
 	UltLineLoad[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
 
 	int x = 0;
-	std::string UltLineLoadTopWall = "\n\nUltimate Line Load at the top of the wall = 1.4(Ecc,DL + Conc,DL) + 1.6(Ecc,LL + Conc,LL)"; 
+	std::string UltLineLoadTopWall = "\n\nUltimate Line Load at the top of the wall = 1.4(Ecc,DL + Conc,DL) + 1.6(Ecc,LL + Conc,LL)";
 	for (int i = 0; i <= 1; i++)
 	{
 		EccDL << std::fixed << std::setprecision(2) << Load[ x ];
@@ -282,7 +307,7 @@ const std::string DVLR::PrintUltLineLoadTopWall()
 		UltLineLoadTopWall.append("\nWult,TopOfWall,Leaf " + std::to_string(i + 1) + " = 1.4(" + EccDL.str());
 		UltLineLoadTopWall.append("kN/m + " + ConcDL.str() + "kN/m) + 1.6(" + EccLL.str() + "kN/m + " );
 		UltLineLoadTopWall.append(ConcLL.str() + "kN/m) = " + UltLineLoad[i].str() + "kN/m");
-		
+
 		// Increments the load array access by 4 spaces for the next leaf
 		x += 4;
 
@@ -341,8 +366,8 @@ const std::string DVLR::PrintLoadSpreadLength()
 	std::ostringstream Pt4Height;
 	Pt4Height << std::fixed << std::setprecision(2) << PtFourH;
 
-	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + 0.4H";
-	
+	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + 0.4H < L";
+
 	for (int i = 0; i <= 1; i++)
 	{
 		SpreadLength << std::fixed << std::setprecision(2) << Spread[i];
@@ -350,9 +375,54 @@ const std::string DVLR::PrintLoadSpreadLength()
 
 		if (OpWidth[i] != 0)
 		{
-			LoadSpeadLength.append("\nLspread Opening" + std::to_string(i+1) + ""); // TODO finish
+			LoadSpeadLength.append("\nLspread Opening " + std::to_string(i+1) + " = " + SpreadLengthMessage[i]);
+			LoadSpeadLength.append("\nTherefore, Lspread Opening " + std::to_string(i + 1) + " = " + SpreadLength.str() + "m");
 		}
+		// Clear the string streams
+		SpreadLength.clear();
+		SpreadLength.str("");
+		BearingLength.clear();
+		BearingLength.str("");
 	}
 
 	return LoadSpeadLength;
+}
+
+// TODO - show ultimate load calculation
+const std::string DVLR::PrintNoLoadSpread()
+{
+	std::string NoLoadSpread = "\n\nConsider the ultimate load on the wall:";
+	NoLoadSpread.append("");
+	return NoLoadSpread;
+}
+
+// TODO - Demonstrate that loads lap
+//		- Calculate ult load of lapped loads
+//		- Show lap length and starting distance from opening 1?
+const std::string DVLR::PrintDoubleLoadSpread()
+{
+	std::string DoubleLoadSpread = "\n\nCheck whether the two load spreads lap:";
+	DoubleLoadSpread.append("\nNote that if the sum of the two load spread lengths is less than the wall length,");
+	DoubleLoadSpread.append("\nthen the two load spreads lap. otherwise, the concentrated load will be considered from");
+	DoubleLoadSpread.append("\nthe largest opening.");
+	return DoubleLoadSpread;
+}
+
+// TODO - Demonstrate that loads do NOT lap
+//		- Calculate ult load of greatest spread load
+const std::string DVLR::PrintNotDoubleLoadSpread()
+{
+	std::string NotDoubleLoadSpread = "\n\nCheck whether the two load spreads lap:";
+	NotDoubleLoadSpread.append("\nNote that if the sum of the two load spread lengths is less than the wall length,");
+	NotDoubleLoadSpread.append("\nthen the two load spreads lap.otherwise, the concentrated load will be considered from");
+	NotDoubleLoadSpread.append("\nthe largest opening.");
+	return NotDoubleLoadSpread;
+}
+
+// TODO -  Calculate ult load of greatest spread load
+const std::string DVLR::PrintSingleSpread()
+{
+	std::string SingleLoadSpread = "\n\nConsider the load spread from a single opening:";
+	SingleLoadSpread.append("");
+	return SingleLoadSpread;
 }

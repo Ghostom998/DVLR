@@ -4,7 +4,9 @@
 #include "stdafx.h" // Turn on in Visual Studio
 #include "MasonryChecker.h"
 #include <iostream>
-#include <string>
+#include <string> // Allows strings to be used
+#include <sstream> // Allows numbers to be cast to strings
+#include <iomanip> // std::setprecision -> allows us to reduce the decimal places in the string stream
 
 DVLR::DVLR() {/* Default Constructor*/ }
 
@@ -48,13 +50,15 @@ const double DVLR::GetTeff()
 				IsValid = true;
 			}
 		} while (!IsValid);
-			
+
 		std::cin.ignore(256, '\n'); // Clear the input buffer of the first 256 characters and newline characters
 	}
 
+	// Calculates the effective thicknesses
 	double t3 = (2 * (TLeaf[0] + TLeaf[1])) / 3;	// Effective thickness of two leaves
 	double t4 = (TLeaf[0] >= TLeaf[1]) ? TLeaf[0] : TLeaf[1]; // Greatest thickness out of both leaves
 
+	// Returns the greatest effective thickness
 	if (t4 >= t3)
 	{
 		TeffEquation = "Max{t1 ; t2} = ";
@@ -75,7 +79,7 @@ const double DVLR::GetHeff()
 		std::cout << "Please input the height of the Wall [mm]:  ";
 		std::cin >> HWall;
 		std::cin.ignore(1000, '\n');
-		
+
 		if (!std::cin) // or if(cin.fail())
 		{
 			// user didn't input a number
@@ -128,6 +132,7 @@ const double DVLR::GetRestraint()
 		}
 		std::cin.ignore(1000, '\n'); // Clear input buffer to prevent errors
 	} while (!IsValid);
+
 	std::exit(-1);
 }
 
@@ -144,6 +149,7 @@ void DVLR::IsSlendernessOK(double& SR)
 	{
 		std::cout << "SR < 27 and therefore within the scope of BS 5628-1." << std::endl << std::endl;
 	}
+	return;
 }
 
 const double DVLR::GetSafetyFactor()
@@ -357,7 +363,7 @@ Wult DVLR::GetSpreadLoad()
 			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
 			// Tells the print output which case to print i.e. No load spread
-			Case = 2;
+			SpreadCaseStatus = SpreadCase::DblLoadSpreadLaps;
 		}
 		// else return the greatest of the singly lapped loads
 		else
@@ -368,7 +374,7 @@ Wult DVLR::GetSpreadLoad()
 			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
 			// Tells the print output which case to print i.e. No load spread
-			Case = 3;
+			SpreadCaseStatus = SpreadCase::DblLoadSpreadDoesNOTLap;
 		}
 	}
 	// if one width is not zero, return the singly lapped load
@@ -379,7 +385,7 @@ Wult DVLR::GetSpreadLoad()
 		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
 		// Tells the print output which case to print i.e. No load spread
-		Case = 4;
+		SpreadCaseStatus = SpreadCase::SglLoadSpread;
 	}
 	// else both openings must be zero, simply calculate the ultimate line load
 	else
@@ -389,7 +395,7 @@ Wult DVLR::GetSpreadLoad()
 		WLoad.Leaf1 = (1.4*SelfWeight[0]) + LoadOverWall.Leaf1;
 		WLoad.Leaf2 = (1.4*SelfWeight[1]) + LoadOverWall.Leaf2;
 		// Tells the print output which case to print i.e. No load spread
-		Case = 1;
+		SpreadCaseStatus = SpreadCase::NoLoadSpread;
 	}
 	return WLoad;
 }
@@ -464,12 +470,39 @@ void DVLR::GetOpenings()
 			} while (!IsBValid);
 				/*std::cout << "Please enter the height to the top of the opening " << i + 1 << " [mm]:  ";
 				std::cin >> OpHeight[i];*/
-			
-			Spread[i] = { BLength[i] + (PtFourH * 1000) };
+
+			Spread[i] = SpreadLength(BLength[i], PtFourH, L, i);
+
 			//SelfWeightOverOpening[i] = GetSelfWeightOverOpening(SelfWeight, HWall, OpHeight[i]);
 		}
 	}
 	return;
+}
+
+double DVLR::SpreadLength(double BearingLength, double Pt4H, double Length, int i)
+{
+	double Spread = BearingLength + (Pt4H * 1000);
+	std::ostringstream SpreadLength;
+	SpreadLength << std::fixed << std::setprecision(2) << Spread;
+	std::ostringstream WallLength;
+	WallLength << std::fixed << std::setprecision(2) << Length;
+	std::ostringstream PointFourH;
+	PointFourH << std::fixed << std::setprecision(2) << Pt4H;
+	std::ostringstream Blength;
+	Blength << std::fixed << std::setprecision(2) << BearingLength;
+
+	SpreadLengthMessage[i] = Blength.str() + "mm + (" + PointFourH.str() + "m * 1000) = ";
+
+	if(Spread > Length)
+	{
+		SpreadLengthMessage[i].append(SpreadLength.str() + "mm > " + WallLength.str() + "mm");
+		return Length;
+	}
+	else
+	{
+		SpreadLengthMessage[i].append(SpreadLength.str() + "mm < " + WallLength.str() + "mm");
+		return Spread;
+	}
 }
 
 const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, double* OpenWidth)
@@ -549,7 +582,7 @@ const Wult DVLR::GetSmallAreaFactor()
 	SAF.Leaf2 = GetSAF(TLeaf[1], L);
 	std::string SAFMessageLeaf2 = SAF.Message;
 	std::cout << SAF.Leaf2 << std::endl << std::endl;
-	
+
 	return SAF;
 }
 

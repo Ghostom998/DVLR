@@ -5,7 +5,6 @@
 #include "MasonryChecker.h"
 #include <iostream>
 #include <limits>
-//using namespace std;
 
 void Intro();
 bool AskToSaveFile();
@@ -34,7 +33,7 @@ int main()
 
 void Intro()
 {
-	std::cout << "Welcome to MasonryChecker, a program to consider the vertical" << std::endl; 
+	std::cout << "Welcome to MasonryChecker, a program to consider the vertical" << std::endl;
 	std::cout << "load design of cavity masonry in accordance with BS 5628 - 1:2005." << std::endl;
 	std::cout << "To exit the program at any time press ctrl+c." << std::endl << std::endl;
 	return;
@@ -57,7 +56,7 @@ void DVLR::StartProgram()
 	Beta = GetBeta();
 	std::cout << "Capacity Reduction Factor to Leaf 1, Beta: " << Beta.Leaf1 << std::endl;
 	std::cout << "Capacity Reduction Factor to Leaf 2, Beta: " << Beta.Leaf2 << std::endl;
-	
+
 	SAF = GetSmallAreaFactor(); // Messages inside function
 
 	std::cout << "Determine Minimum required masonry strength:" << std::endl;
@@ -65,7 +64,7 @@ void DVLR::StartProgram()
 	MinFk.Leaf2 = GetMinFk(PSF, WultLoad.Leaf2, Beta.Leaf2, SAF.Leaf2, TLeaf[1]);
 	std::cout << "Minimum required masonry strength to Leaf 1, Fk = " << MinFk.Leaf1 << "N/mm2" << std::endl;
 	std::cout << "Minimum required masonry strength to Leaf 2, Fk = " << MinFk.Leaf2 << "N/mm2" << std::endl;
-	
+
 	return;
 }
 
@@ -79,7 +78,7 @@ bool AskToSaveFile()
 	std::getline(std::cin, Response);
 	std::cout << std::endl;
 
-	// Returns the bool true if the first letter begins 
+	// Returns the bool true if the first letter begins
 	// with the upper or lowercase "y" else returns false.
 	return (Response[0] == 'y') || (Response[0] == 'Y');
 }
