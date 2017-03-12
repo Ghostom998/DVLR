@@ -360,6 +360,7 @@ Wult DVLR::GetSpreadLoad()
 			WLoad.Message = "Both load spreads lap.";
 			WLoad.Message.append("\nConsidering the load concentration from both load spreads lapping.");
 			std::cout << WLoad.Message << std::endl;
+			// Opening array passed as both are required per leaf calculation!
 			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
 			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
 			// Tells the print output which case to print i.e. No load spread
@@ -451,7 +452,7 @@ void DVLR::GetOpenings()
 			bool IsBValid = true;
 			do
 			{
-				std::cout << "Please enter the bearing length of the member forming opening " << i + 1 << " [mm]:  ";
+				std::cout << "Please enter the bearing/padstone length of the member forming opening " << i + 1 << " [mm]:  ";
 				std::cin >> BLength[i];
 				//Checks if user input a number
 				if (!std::cin) // or if(cin.fail())

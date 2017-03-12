@@ -170,11 +170,14 @@ const std::string DVLR::PrintLoadings()
 	Loading.append(SelfWeight);
 
 	// Print Load Spread Length calcs
-	std::string LoadSpreadLength = PrintLoadSpreadLength();
-	Loading.append(LoadSpreadLength);
+	if (SpreadCaseStatus != SpreadCase::NoLoadSpread) //only print if there is a load spread i.e. anything BUT no load spread
+	{
+		std::string LoadSpreadLength = PrintLoadSpreadLength();
+		Loading.append(LoadSpreadLength);
+	}
 
 	// Print Load Lap dependant on case - cases determined in DVLR::GetSpreadLoad()
-	// Note: Ultimate load determine here
+	// Note: Ultimate load determined here
 	std::string LoadLap = "";
 	switch(SpreadCaseStatus)
 	{
@@ -185,16 +188,17 @@ const std::string DVLR::PrintLoadings()
 		LoadLap = PrintDoubleLoadSpread();
 		break;
 	case SpreadCase::DblLoadSpreadDoesNOTLap:
-		LoadLap = PrintNotDoubleLoadSpread();
+		// Same method as case "DblLoadSpreadLaps", branches into single load spread
+		LoadLap = PrintDoubleLoadSpread();
 		break;
 	case SpreadCase::SglLoadSpread:
 		LoadLap = PrintSingleSpread();
 		break;
 	default:
 			// if none of the above conditions were met then there was clearly an error
-			std::cerr << "Error printing load spread. Please try again." << std::endl;
-			std::cerr << "If the error persists, please report the error with the steps to reproduce it." << std::endl;
-			std::cerr << "Please \"create an issue\" in: https://github.com/Ghostom998/DVLR/issues" << std::endl;
+			std::cout << "Error printing load spread. Please try again." << std::endl;
+			std::cout << "If the error persists, please report the error with the steps to reproduce it." << std::endl;
+			std::cout << "Please \"create an issue\" in: https://github.com/Ghostom998/DVLR/issues" << std::endl;
 			std::exit(-1);
 	}
 	Loading.append(LoadLap);	
@@ -208,6 +212,13 @@ const std::string DVLR::PrintEccentricity()
 {
 	std::string Eccentricity = "";
 	return Eccentricity;
+}
+
+// TODO Print SAF
+const std::string DVLR::PrintSAF()
+{
+	std::string SAF = "";
+	return SAF;
 }
 
 // TODO Print minimum Fk required
@@ -336,7 +347,7 @@ const std::string DVLR::PrintSelfWeight()
 
 	std::string SelfWt = "\n\nSelfWeight at 0.4H from the top of the wall:";
 	SelfWt.append("\n0.4H = 0.4*" + Height.str() + "m = " + Pt4Height.str() + "m");
-	SelfWt.append("\nSW,0.4H = 0.4H*t*Ymas");
+	SelfWt.append("\nSW,0.4H = Ymas*0.4H*t");
 
 	for (int i = 0; i <= 1; i++)
 	{
@@ -353,6 +364,8 @@ const std::string DVLR::PrintSelfWeight()
 		Ymas.str("");
 		Swt.clear();
 		Swt.str("");
+		Thickness.clear();
+		Thickness.str("");
 	}
 
 	return SelfWt;
@@ -388,41 +401,131 @@ const std::string DVLR::PrintLoadSpreadLength()
 	return LoadSpeadLength;
 }
 
-// TODO - show ultimate load calculation
+// If no load spread (due to no openings), show ultimate load calculation
 const std::string DVLR::PrintNoLoadSpread()
 {
+	std::ostringstream SW;
+	std::ostringstream LoadLeaf[2];
+	LoadLeaf[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
+	LoadLeaf[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
+	std::ostringstream UltLoad[2];
+	UltLoad[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
+	UltLoad[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
+
 	std::string NoLoadSpread = "\n\nConsider the ultimate load on the wall:";
-	NoLoadSpread.append("");
+	NoLoadSpread.append("\nWult = 1.4*SelfWeight + Wult,TopOfWall");
+
+	for (int i = 0; i <= 1; i++)
+	{
+		SW << std::fixed << std::setprecision(2) << SelfWeight[i];
+		NoLoadSpread.append("\nWult,Leaf" + std::to_string(i+1) + " = 1.4*" + SW.str() + "kN/m + "+ LoadLeaf[i].str() + "kN/m = " + UltLoad[i].str() + "kN/m");
+		SW.clear();
+		SW.str("");
+	}
+	
 	return NoLoadSpread;
 }
 
-// TODO - Demonstrate that loads lap
-//		- Calculate ult load of lapped loads
+// TODO - Calculate ult load of lapped loads
 //		- Show lap length and starting distance from opening 1?
 const std::string DVLR::PrintDoubleLoadSpread()
 {
-	std::string DoubleLoadSpread = "\n\nCheck whether the two load spreads lap:";
-	DoubleLoadSpread.append("\nNote that if the sum of the two load spread lengths is less than the wall length,");
-	DoubleLoadSpread.append("\nthen the two load spreads lap. otherwise, the concentrated load will be considered from");
-	DoubleLoadSpread.append("\nthe largest opening.");
-	return DoubleLoadSpread;
-}
+	std::ostringstream SpreadLength[2];
+	SpreadLength[0] << std::fixed << std::setprecision(2) << Spread[0];
+	SpreadLength[1] << std::fixed << std::setprecision(2) << Spread[1];
+	std::ostringstream SpreadLengthSum;
+	SpreadLengthSum << std::fixed << std::setprecision(2) << Spread[0] + Spread[1];
+	std::ostringstream Length;
+	Length << std::fixed << std::setprecision(2) << L;
 
-// TODO - Demonstrate that loads do NOT lap
-//		- Calculate ult load of greatest spread load
-const std::string DVLR::PrintNotDoubleLoadSpread()
-{
-	std::string NotDoubleLoadSpread = "\n\nCheck whether the two load spreads lap:";
-	NotDoubleLoadSpread.append("\nNote that if the sum of the two load spread lengths is less than the wall length,");
-	NotDoubleLoadSpread.append("\nthen the two load spreads lap.otherwise, the concentrated load will be considered from");
-	NotDoubleLoadSpread.append("\nthe largest opening.");
-	return NotDoubleLoadSpread;
+	std::string DoubleLoadSpread = "\n\nCheck whether the two load spreads lap:";
+	DoubleLoadSpread.append("\nLoads lap if: Lspread1 + Lspread2 > L");
+	DoubleLoadSpread.append("\n" + SpreadLength[0].str() + "mm + " + SpreadLength[1].str() + "mm = " + SpreadLengthSum.str() + "mm ");
+	if (SpreadCaseStatus == SpreadCase::DblLoadSpreadDoesNOTLap)
+	{
+		DoubleLoadSpread.append("< ");
+		DoubleLoadSpread.append(Length.str() + "mm");
+		DoubleLoadSpread.append("\nBoth loads do NOT lap and we will therefore need to design for the greatest concentration.");
+		DoubleLoadSpread.append("\nProceeding to the load spread analysis from the greater load at opening " + BiggestOpening);
+		std::string SingleSpreadLoad = PrintSingleSpread();
+		DoubleLoadSpread.append(SingleSpreadLoad);
+	}
+	else
+	{
+		// Call the string stream only if branching to double load spread calc
+		std::ostringstream SW;
+		std::ostringstream UltTopWall[2];
+		UltTopWall[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
+		UltTopWall[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
+		std::ostringstream OpeningWidth[2];
+		OpeningWidth[0] << std::fixed << std::setprecision(2) << OpWidth[0];
+		OpeningWidth[1] << std::fixed << std::setprecision(2) << OpWidth[1];
+		std::ostringstream Wult[2];
+		Wult[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
+		Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
+
+		DoubleLoadSpread.append("> ");
+		DoubleLoadSpread.append(Length.str() + "mm");
+		DoubleLoadSpread.append("\nAnd hence both load spreads lap. \nWult = ");
+		DoubleLoadSpread.append("(Wult,TopOfWall + (1.4*Selfweight)) + (Wult,TopOfWall *(OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000)) + ");
+		DoubleLoadSpread.append("(Wult,TopOfWall *(OpenWidth2 / 1000)) / (2 * (Lspread2 / 1000))");
+		for (int i = 0; i <= 1; i++)
+		{
+			SW << std::fixed << std::setprecision(2) << SelfWeight[i];
+			DoubleLoadSpread.append("\nWult,Leaf" + std::to_string(i + 1) + " = (");
+			DoubleLoadSpread.append(UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + (" + UltTopWall[i].str() + "kN/m *(" + OpeningWidth[0].str() + "mm / 1000)) ");
+			DoubleLoadSpread.append("/ (2 * (" + SpreadLength[0].str() + "mm / 1000)) + (" + UltTopWall[i].str() + " *(" + OpeningWidth[1].str() + "mm / 1000)) / (2 * (");
+			DoubleLoadSpread.append(SpreadLength[1].str() + "mm / 1000))");
+			DoubleLoadSpread.append("\n= " + Wult[i].str() + "kN/m");
+			SW.clear();
+			SW.str("");
+		}
+	}
+	return DoubleLoadSpread;
 }
 
 // TODO -  Calculate ult load of greatest spread load
 const std::string DVLR::PrintSingleSpread()
 {
-	std::string SingleLoadSpread = "\n\nConsider the load spread from a single opening:";
-	SingleLoadSpread.append("");
+	std::ostringstream SW;
+	std::ostringstream Length;
+	Length << std::fixed << std::setprecision(2) << L;
+
+	// Values based on greatest opening size
+	
+	std::ostringstream UltTopWall[2];
+	UltTopWall[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
+	UltTopWall[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
+	std::ostringstream Wult[2];
+	Wult[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
+	Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
+	std::ostringstream OpeningWidth;
+	std::ostringstream SpreadLength;
+
+	// Assign string stream operators based on greatest load
+	if (OpWidth[0] >= OpWidth[1])
+	{
+		BiggestOpening = "1";
+		SpreadLength << std::fixed << std::setprecision(2) << Spread[0];
+		OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[0];
+	}
+	else
+	{
+		BiggestOpening = "2";
+		SpreadLength << std::fixed << std::setprecision(2) << Spread[1];
+		OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[1];
+	}
+
+	std::string SingleLoadSpread = "\n\nConsider the load spread from opening " + BiggestOpening + ":";
+	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4*Selfweight)) + (Wult,TopOfWall *(OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
+	
+	for (int i = 0; i <= 1; i++)
+	{
+		SingleLoadSpread.append("\n" + UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + (" + UltTopWall[i].str() + "kN/m *(" + OpeningWidth.str() + "mm / 1000)) ");
+		SingleLoadSpread.append("/ (2 * (" + SpreadLength.str() + "mm / 1000)) = ");
+		SingleLoadSpread.append(Wult[i].str() + "kN/m");
+		SW.clear();
+		SW.str("");
+	}
 	return SingleLoadSpread;
 }

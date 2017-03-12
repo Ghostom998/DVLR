@@ -83,7 +83,7 @@ public: // Methods
 	const double GetMinFk(double&, double&, double&, double&, double&);
 
 	// TODO Method to determine minFk based on bearing beneath the lintel const CheckLintelBearing();
-	// BLength < 2t => 1.5fk/ym  ;  BLength < 3t => 1.25fk/ym
+	// BLength < 2t = 1.5fk/ym  ;  BLength < 3t => 1.25fk/ym
 
 // Methods to print *.txt output
 
@@ -111,12 +111,12 @@ public: // Methods
 			const std::string PrintLoadSpreadLength();
 			const std::string PrintNoLoadSpread();
 			const std::string PrintDoubleLoadSpread();
-			const std::string PrintNotDoubleLoadSpread();
 			const std::string PrintSingleSpread();
 
-		// Print the eccentricity and the capacity reduction factor
+		// Print the eccentricity, SAF and the capacity reduction factor
 		const std::string PrintEccentricity();
 
+		const std::string PrintSAF();
 
 		const std::string PrintMinFk();
 
@@ -189,6 +189,8 @@ private: // Members
 	Fk MinFk;
 	/// Displays the correct message in the txt output
 	std::string SpreadLengthMessage[2];
+	/// Diplays the greatest opening size to tell the user which is causing the greatest load concentration.
+	std::string BiggestOpening;
 	/// A default case which should indicate whether or not the program is properly assigning 
 	SpreadCase SpreadCaseStatus = SpreadCase::Invalid_status;
 
