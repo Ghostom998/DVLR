@@ -72,7 +72,7 @@ public: // Methods
 			double SpreadLength(double, double, double, int);
 		Wult GetSpreadLoad();
 		const void GetSelfWeight();
-		const Wult GetSelfWeightOverOpening(double*, double, double);
+		const Wult GetSelfWeightOverOpening(double*, double, double, int);
 		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2]);
 		const double GetDoubleLapLoad(double, double, struct StructuralOpenings OpenWidth[2]);
 		Wult GetUltLineLoad(double*);

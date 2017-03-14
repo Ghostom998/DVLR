@@ -6,6 +6,7 @@
 #include <sstream>		// String Stream: allows numbers to be cast as strings (i.e. to_string() )
 #include <fstream>		// File Stream: allows input/output to file
 
+bool OpenFile();
 
 const int DVLR::PrintToFile()
 {
@@ -72,10 +73,41 @@ const int DVLR::PrintToFile()
 	else
 	{
 		// Assumes that if there were no errors, then the file was written succesfully
-		std::cout << "\nThe program has written to the file without error." << std::endl;
+		std::cout << "The program has written to the file without error." << std::endl;
+		bool ShouldUserOpenFile = OpenFile();
+		if (ShouldUserOpenFile)
+		{
+			#ifdef _WIN32
+			// Build the command to pass to system
+			std::string Command = "notepad.exe " + FileName + ".txt";
+			system(Command.c_str());
+			#elif __unix__
+			// Build the command to pass to system
+			std::string Command = "gedit " + FileName + ".txt";
+			execl(Command.c_str());
+			#else
+			#error 
+			std::cout << "OS not supported!" << std::endl;
+			#endif
+		}
 		// Exit to main()
 		return 0;
 	}
+}
+
+bool OpenFile()
+{
+	// Flushes the input buffer
+	//std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+	std::cout << "\nDo you want to open the file output? (y/n):  ";
+	std::string Response = "";
+	std::getline(std::cin, Response);
+	std::cout << std::endl;
+
+	// Returns the bool true if the first letter begins
+	// with the upper or lowercase "y" else returns false.
+	return (Response[0] == 'y') || (Response[0] == 'Y');
 }
 
 // A main print method

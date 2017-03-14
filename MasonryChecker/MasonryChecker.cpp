@@ -1,7 +1,7 @@
 // MasonryChecker.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h" // Turn on in Visual Studio
+#include "stdafx.h"		// Turn on in Visual Studio
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string> // Allows strings to be used
@@ -323,14 +323,19 @@ const void DVLR::GetSelfWeight()
 }
 
 // TODO Get SW over opening
-const Wult DVLR::GetSelfWeightOverOpening(double* SWeight, double HeightofWall, double OpeningHeight)
+const Wult DVLR::GetSelfWeightOverOpening(double* SWeight, double HeightofWall, double OpeningHeight, int OpeningNumber)
 {
-Wult SWOO;
+	// Self weight Over Opening
+	Wult SWOO;
 
-SWOO.Leaf1 = SWeight[0] * (HeightofWall - OpeningHeight);
-SWOO.Leaf2 = SWeight[1] * (HeightofWall - OpeningHeight);
+	SWOO.Leaf1 = SWeight[0] * (HeightofWall - OpeningHeight)/1000;
+	SWOO.Leaf2 = SWeight[1] * (HeightofWall - OpeningHeight)/1000;
 
-return SWOO;
+	std::cout << "Self weight of masonry over opening " << OpeningNumber+1 << " = SelfWeight * (HeightofWall - OpeningHeight)" << std::endl;
+	std::cout << "SWOO, Leaf 1 = " << SWeight[0] << "kN/m^3 * (" << HeightofWall/1000 << "m - " << OpeningHeight/1000 << "m) = " << SWOO.Leaf1 << "kN/m" << std::endl;
+	std::cout << "SWOO, Leaf 2 = " << SWeight[1] << "kN/m^3 * (" << HeightofWall/1000 << "m - " << OpeningHeight/1000 << "m) = " << SWOO.Leaf2 << "kN/m" << std::endl;
+
+	return SWOO;
 }
 
 Wult DVLR::GetUltLineLoad(double* Load)
@@ -497,7 +502,7 @@ void DVLR::GetOpenings()
 				
 			Opening[i].Spread = SpreadLength(Opening[i].BLength, PtFourH, L, i);
 
-			SelfWeightOverOpening[i] = GetSelfWeightOverOpening(SelfWeight, HWall, Opening[i].Height);
+			SelfWeightOverOpening[i] = GetSelfWeightOverOpening(SelfWeight, HWall, Opening[i].Height, i);
 		}
 	}
 	return;

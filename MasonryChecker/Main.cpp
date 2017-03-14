@@ -1,7 +1,7 @@
 // MasonryChecker.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+#include "stdafx.h"		// Turn on in Visual Studio
 #include "MasonryChecker.h"
 #include <iostream>
 #include <limits>
