@@ -63,9 +63,10 @@ const int DVLR::PrintToFile()
 	// If write  is not successfull
 	if (!writer)
 	{
-		// ... Display an error message and close the program in error.
+		// ... Display an error message 
 		std::cout << "Error writing to file." << std::endl;
 		std::cout << "Please check that you have permission to save to the location or \ndo not already have a file of the same name open." << std::endl;
+		// ...and close the program in error.
 		std::exit(-1);
 	}
 	else
@@ -271,19 +272,19 @@ const std::string DVLR::PrintOpenings()
 	std::ostringstream OpeningWidth;
 	std::ostringstream BearingLength;
 	// Setup write string
-	std::string Opening = "";
+	std::string POpening = "";
 	for (int i = 0; i <= 1; i++)
 	{
 		// If there is an opening
-		if (OpWidth[i] != 0)
+		if (Opening[i].IsOpening)
 		{
 			// Assign the string streams
-			OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[i];
-			BearingLength << std::fixed << std::setprecision(2) << BLength[i];
+			OpeningWidth << std::fixed << std::setprecision(2) << Opening[i].Width;
+			BearingLength << std::fixed << std::setprecision(2) << Opening[i].BLength;
 
 			// Write to file
-			Opening.append("\nOpening Width, OpWidth,Leaf" + std::to_string(i + 1) + ": " + OpeningWidth.str() + "mm");
-			Opening.append("\nBearing Length of member supporting Opening, BLength,Leaf" + std::to_string(i + 1) + ": " + BearingLength.str() + "mm");
+			POpening.append("\nOpening Width, OpWidth,Leaf" + std::to_string(i + 1) + ": " + OpeningWidth.str() + "mm");
+			POpening.append("\nBearing Length of member supporting Opening, BLength,Leaf" + std::to_string(i + 1) + ": " + BearingLength.str() + "mm");
 
 			// Clears the string stream for the next usage
 			OpeningWidth.clear();
@@ -292,7 +293,7 @@ const std::string DVLR::PrintOpenings()
 			BearingLength.str("");
 		}
 	}
-	return Opening;
+	return POpening;
 }
 
 const std::string DVLR::PrintUltLineLoadTopWall()
@@ -383,10 +384,10 @@ const std::string DVLR::PrintLoadSpreadLength()
 
 	for (int i = 0; i <= 1; i++)
 	{
-		SpreadLength << std::fixed << std::setprecision(2) << Spread[i];
-		BearingLength << std::fixed << std::setprecision(2) << BLength[i];
+		SpreadLength << std::fixed << std::setprecision(2) << Opening[i].Spread;
+		BearingLength << std::fixed << std::setprecision(2) << Opening[i].BLength;
 
-		if (OpWidth[i] != 0)
+		if (Opening[i].IsOpening)
 		{
 			LoadSpeadLength.append("\nLspread Opening " + std::to_string(i+1) + " = " + SpreadLengthMessage[i]);
 			LoadSpeadLength.append("\nTherefore, Lspread Opening " + std::to_string(i + 1) + " = " + SpreadLength.str() + "m");
@@ -426,15 +427,14 @@ const std::string DVLR::PrintNoLoadSpread()
 	return NoLoadSpread;
 }
 
-// TODO - Calculate ult load of lapped loads
-//		- Show lap length and starting distance from opening 1?
+// Calculate ult load of lapped loads
 const std::string DVLR::PrintDoubleLoadSpread()
 {
 	std::ostringstream SpreadLength[2];
-	SpreadLength[0] << std::fixed << std::setprecision(2) << Spread[0];
-	SpreadLength[1] << std::fixed << std::setprecision(2) << Spread[1];
+	SpreadLength[0] << std::fixed << std::setprecision(2) << Opening[0].Spread;
+	SpreadLength[1] << std::fixed << std::setprecision(2) << Opening[1].Spread;
 	std::ostringstream SpreadLengthSum;
-	SpreadLengthSum << std::fixed << std::setprecision(2) << Spread[0] + Spread[1];
+	SpreadLengthSum << std::fixed << std::setprecision(2) << Opening[0].Spread + Opening[1].Spread;
 	std::ostringstream Length;
 	Length << std::fixed << std::setprecision(2) << L;
 
@@ -458,8 +458,8 @@ const std::string DVLR::PrintDoubleLoadSpread()
 		UltTopWall[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
 		UltTopWall[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
 		std::ostringstream OpeningWidth[2];
-		OpeningWidth[0] << std::fixed << std::setprecision(2) << OpWidth[0];
-		OpeningWidth[1] << std::fixed << std::setprecision(2) << OpWidth[1];
+		OpeningWidth[0] << std::fixed << std::setprecision(2) << Opening[0].Width;
+		OpeningWidth[1] << std::fixed << std::setprecision(2) << Opening[1].Width;
 		std::ostringstream Wult[2];
 		Wult[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
 		Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
@@ -484,7 +484,7 @@ const std::string DVLR::PrintDoubleLoadSpread()
 	return DoubleLoadSpread;
 }
 
-// TODO -  Calculate ult load of greatest spread load
+// Calculate ult load of (greatest) spread load
 const std::string DVLR::PrintSingleSpread()
 {
 	std::ostringstream SW;
@@ -503,17 +503,17 @@ const std::string DVLR::PrintSingleSpread()
 	std::ostringstream SpreadLength;
 
 	// Assign string stream operators based on greatest load
-	if (OpWidth[0] >= OpWidth[1])
+	if (Opening[0].Width >= Opening[1].Width)
 	{
 		BiggestOpening = "1";
-		SpreadLength << std::fixed << std::setprecision(2) << Spread[0];
-		OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[0];
+		SpreadLength << std::fixed << std::setprecision(2) << Opening[0].Spread;
+		OpeningWidth << std::fixed << std::setprecision(2) << Opening[0].Width;
 	}
 	else
 	{
 		BiggestOpening = "2";
-		SpreadLength << std::fixed << std::setprecision(2) << Spread[1];
-		OpeningWidth << std::fixed << std::setprecision(2) << OpWidth[1];
+		SpreadLength << std::fixed << std::setprecision(2) << Opening[1].Spread;
+		OpeningWidth << std::fixed << std::setprecision(2) << Opening[1].Width;
 	}
 
 	std::string SingleLoadSpread = "\n\nConsider the load spread from opening " + BiggestOpening + ":";

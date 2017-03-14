@@ -323,7 +323,7 @@ const void DVLR::GetSelfWeight()
 }
 
 // TODO Get SW over opening
-/*const Wult DVLR::GetSelfWeightOverOpening(double* SWeight, double HeightofWall, double OpeningHeight)
+const Wult DVLR::GetSelfWeightOverOpening(double* SWeight, double HeightofWall, double OpeningHeight)
 {
 Wult SWOO;
 
@@ -331,7 +331,7 @@ SWOO.Leaf1 = SWeight[0] * (HeightofWall - OpeningHeight);
 SWOO.Leaf2 = SWeight[1] * (HeightofWall - OpeningHeight);
 
 return SWOO;
-}*/
+}
 
 Wult DVLR::GetUltLineLoad(double* Load)
 {
@@ -352,17 +352,17 @@ Wult DVLR::GetSpreadLoad()
 	// Get the opening widths, bearing lengths and load spreads.
 	GetOpenings();
 	// If both opening widths are not zero
-	if (OpWidth[0] != 0 && OpWidth[1] != 0)
+	if (Opening[0].IsOpening && Opening[1].IsOpening)
 	{
 		// and if both of the load spreads lap
-		if (Spread[0] + Spread[1] >= L)
+		if (Opening[0].Spread + Opening[1].Spread >= L)
 		{
 			WLoad.Message = "Both load spreads lap.";
 			WLoad.Message.append("\nConsidering the load concentration from both load spreads lapping.");
 			std::cout << WLoad.Message << std::endl;
 			// Opening array passed as both are required per leaf calculation!
-			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
-			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2]);
+			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2]);
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadLaps;
 		}
@@ -372,19 +372,19 @@ Wult DVLR::GetSpreadLoad()
 			WLoad.Message = "Load spreads do not lap.";
 			WLoad.Message.append( "\nConsidering the load concentration from the greatest load concentration.");
 			std::cout << WLoad.Message << std::endl;
-			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
-			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2]);
+			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2]);
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadDoesNOTLap;
 		}
 	}
 	// if one width is not zero, return the singly lapped load
-	else if (OpWidth[0] != 0 || OpWidth[1] != 0)
+	else if (Opening[0].IsOpening || Opening[1].IsOpening)
 	{
 		WLoad.Message = "Considering a load concentration from the spread load.";
 		std::cout << WLoad.Message << std::endl;
-		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], OpWidth);
-		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], OpWidth);
+		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2]);
+		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2]);
 		// Tells the print output which case to print i.e. No load spread
 		SpreadCaseStatus = SpreadCase::SglLoadSpread;
 	}
@@ -401,7 +401,7 @@ Wult DVLR::GetSpreadLoad()
 	return WLoad;
 }
 
-// Future suggestion: create an struct for openings including width, height and bearing length and simply declare the openings as an array i.e. Opening[2] for looping purposes
+// TODO - Refactor into seperate sub-methods
 void DVLR::GetOpenings()
 {
 	bool IsValid = true;
@@ -430,7 +430,7 @@ void DVLR::GetOpenings()
 		do
 		{
 			std::cout << "Please enter the width of opening " << i + 1 << " [mm]:  ";
-			std::cin >> OpWidth[i];
+			std::cin >> Opening[i].Width;
 			//Checks if user input a number
 			if (!std::cin) // or if(cin.fail())
 			{
@@ -447,13 +447,17 @@ void DVLR::GetOpenings()
 			}
 		} while (!IsOpValid);
 
-		if (OpWidth[i] != 0)
+		// If there is an opening...
+		if (Opening[i].Width != 0)
 		{
+			Opening[i].IsOpening = true;
 			bool IsBValid = true;
+			bool IsOpHValid = true;
+			// ..Get the bearing length...
 			do
 			{
 				std::cout << "Please enter the bearing/padstone length of the member forming opening " << i + 1 << " [mm]:  ";
-				std::cin >> BLength[i];
+				std::cin >> Opening[i].BLength;
 				//Checks if user input a number
 				if (!std::cin) // or if(cin.fail())
 				{
@@ -469,20 +473,42 @@ void DVLR::GetOpenings()
 					IsBValid = true;
 				}
 			} while (!IsBValid);
-				/*std::cout << "Please enter the height to the top of the opening " << i + 1 << " [mm]:  ";
-				std::cin >> OpHeight[i];*/
+			 // .. and get the height to the top of the opening
+			do
+			{
+				std::cout << "Please enter the height to the top of the opening " << i + 1 << " [mm]:  ";
+				std::cin >> Opening[i].Height;
 
-			Spread[i] = SpreadLength(BLength[i], PtFourH, L, i);
+				//Checks if user input a number
+				if (!std::cin) // or if(cin.fail())
+				{
+					// user didn't input a number
+					std::cin.clear(); // reset failbit
+					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
+																						// next, request user reinput
+					IsOpHValid = false;
+					std::cout << "Invalid input, please try again." << std::endl;
+				}
+				else
+				{
+					IsBValid = true;
+				}
+			} while (!IsOpHValid);
+				
+			Opening[i].Spread = SpreadLength(Opening[i].BLength, PtFourH, L, i);
 
-			//SelfWeightOverOpening[i] = GetSelfWeightOverOpening(SelfWeight, HWall, OpHeight[i]);
+			SelfWeightOverOpening[i] = GetSelfWeightOverOpening(SelfWeight, HWall, Opening[i].Height);
 		}
 	}
 	return;
 }
 
+// TODO - Move to TxtOutput.cpp ???
 double DVLR::SpreadLength(double BearingLength, double Pt4H, double Length, int i)
 {
+	// needs pt4H - Openinghieght
 	double Spread = BearingLength + (Pt4H * 1000);
+
 	std::ostringstream SpreadLength;
 	SpreadLength << std::fixed << std::setprecision(2) << Spread;
 	std::ostringstream WallLength;
@@ -506,22 +532,22 @@ double DVLR::SpreadLength(double BearingLength, double Pt4H, double Length, int 
 	}
 }
 
-const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, double* OpenWidth)
+const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2])
 {
-	if (OpenWidth[0] >= OpenWidth[1])
+	if (OpenWidth[0].Width >= OpenWidth[1].Width)
 	{
-		return ((UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[0] / 1000)) / (2 * (Spread[0] / 1000))));
+		return ((UltLoad + (1.4*Selfweight)) + ((UltLoad*(OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000))));
 	}
 	else
 	{
-		return ((UltLoad + (1.4*Selfweight)) + (UltLoad *(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000)));
+		return ((UltLoad + (1.4*Selfweight)) + (UltLoad *(OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000)));
 	}
 }
 
-const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double* OpenWidth)
+const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2])
 {
-	return (UltLoad + (1.4*Selfweight)) + (UltLoad *(OpenWidth[1] / 1000)) / (2 * (Spread[1] / 1000))
-		+ (UltLoad *(OpenWidth[0] / 1000)) / (2 * (Spread[0] / 1000));
+	return (UltLoad + (1.4*Selfweight)) + (UltLoad *(OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000))
+		+ (UltLoad *(OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000));
 }
 
 const Wult DVLR::GetBeta()

@@ -18,6 +18,17 @@ struct Fk
 	double Leaf2 = 0;
 };
 
+// Opening object created in the DVLR class
+struct StructuralOpenings
+{
+	// Assumes there is no opening unless the user specifically inputs otherwise
+	bool IsOpening = false; 
+	double Width = 0;
+	double BLength = 0;
+	double Height = 0;
+	double Spread = 0;
+};
+
 enum class SpreadCase
 {
 	Invalid_status,
@@ -61,9 +72,9 @@ public: // Methods
 			double SpreadLength(double, double, double, int);
 		Wult GetSpreadLoad();
 		const void GetSelfWeight();
-		//const Wult GetSelfWeightOverOpening(double*, double, double);
-		const double GetSingleLapLoad(double, double, double*);
-		const double GetDoubleLapLoad(double, double, double*);
+		const Wult GetSelfWeightOverOpening(double*, double, double);
+		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2]);
+		const double GetDoubleLapLoad(double, double, struct StructuralOpenings OpenWidth[2]);
 		Wult GetUltLineLoad(double*);
 
 	const Wult GetBeta();
@@ -87,10 +98,7 @@ public: // Methods
 
 // Methods to print *.txt output
 
-	// PrintToFile() will take the file name, run the sub methods, run error checks and close the file at the end.
-	// Each sub method will write to the file at the end of its method
-	// We will have PrintToFile() display if the file write was successfully or warn that it wasnt. We may ask the user if they wish to TryAgain?
-	// The file will then exit to main which will return 0;
+	// The main print method. Controls and checks the other sub methods listed below.
 	const int PrintToFile();
 
 		// Print the introduction section
@@ -120,8 +128,6 @@ public: // Methods
 
 		const std::string PrintMinFk();
 
-
-
 private: // Members
 
 	/// Leaf thicknesses
@@ -141,11 +147,13 @@ private: // Members
 	/// Length of wall considered
 	double L = 0;
 	/// Opening width
-	double OpWidth[2] = { 0, 0 };
+	StructuralOpenings Opening[2];
+
+	//double OpWidth[2] = { 0, 0 };
 	/// Bearing length
-	double BLength[2] = { 0, 0 };
+	//double BLength[2] = { 0, 0 };
 	/// Height to the top of the opening
-	// double OpHeight[2] = { 0, 0 };
+	//double OpHeight[2] = { 0, 0 };
 	/// Slenderness Ratio
 	double SR = 0;
 	/// Partial Safety Factor
@@ -169,13 +177,13 @@ private: // Members
 	/// Masonry Self weight
 	double UnitWeight[2] = { 0 , 0 };
 	double SelfWeight[2] = { 0 , 0 };
-	//Wult SelfWeightOverOpening[2] = { 0 , 0 };
+	Wult SelfWeightOverOpening[2] = { 0 , 0 };
 	/// Ultimate Load
 	Wult WultLoad;
 	/// Factored load over wall w/o wall self weight and load concentration
 	Wult LoadOverWall;
 	/// Load Spread Length, assumed at 45 degrees from edge of member bearing
-	double Spread[2] = {0, 0};
+	//double Spread[2] = {0, 0};
 	/// Loaded Eccentricity
 	double Ex[2] = { 0, 0 };
 	double Ea[2] = { 0, 0 };
@@ -191,7 +199,7 @@ private: // Members
 	std::string SpreadLengthMessage[2];
 	/// Diplays the greatest opening size to tell the user which is causing the greatest load concentration.
 	std::string BiggestOpening;
-	/// A default case which should indicate whether or not the program is properly assigning 
+	/// A default case which should indicate whether or not the program is properly assigning the case
 	SpreadCase SpreadCaseStatus = SpreadCase::Invalid_status;
 
 };
