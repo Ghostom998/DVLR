@@ -10,9 +10,10 @@ bool OpenFile();
 
 const int DVLR::PrintToFile()
 {
-	// Take a name for the file
 	std::string FileName = "";
-	std::cout << "Beware: Any txt file with the same name will be overwritten without warning." << std::endl;
+
+	// Take a name for the file
+	std::cout << "Beware: Any .txt file with the same name will be overwritten without warning." << std::endl;
 	std::cout << "Please enter the file name [*.txt]:  ";
 	std::getline(std::cin, FileName);
 
@@ -58,10 +59,10 @@ const int DVLR::PrintToFile()
 	// Write MinFk text to file
 	writer << MinFk << std::endl;
 
-	// After finishing writing we close the filestream
+	// After finishing writing we close the file stream
 	writer.close();
 
-	// If write  is not successfull
+	// If write  is not successful
 	if (!writer)
 	{
 		// ... Display an error message 
@@ -72,7 +73,7 @@ const int DVLR::PrintToFile()
 	}
 	else
 	{
-		// Assumes that if there were no errors, then the file was written succesfully
+		// Assumes that if there were no errors, then the file was written successfully
 		std::cout << "The program has written to the file without error." << std::endl;
 		bool ShouldUserOpenFile = OpenFile();
 		if (ShouldUserOpenFile)
@@ -81,13 +82,16 @@ const int DVLR::PrintToFile()
 			// Build the command to pass to system
 			std::string Command = "notepad.exe " + FileName + ".txt";
 			system(Command.c_str());
+			std::exit(0);
 			#elif __unix__
-			// Build the command to pass to system
-			std::string Command = "gedit " + FileName + ".txt";
+			// Build the command to pass to system - WIP 
+			std::string Command = "gedit " + FileName + ".txt\n";
 			execl(Command.c_str());
+			std::exit(0);
 			#else
 			#error 
-			std::cout << "OS not supported!" << std::endl;
+			std::cout << "OS not supported!\n" << std::endl;
+			std::exit(-1);
 			#endif
 		}
 		// Exit to main()
@@ -184,8 +188,8 @@ const std::string DVLR::PrintLoadings()
 	std::string LoadAtTopOfWall = PrintLoadingsTopWall();
 	Loading.append(LoadAtTopOfWall);
 
-	Loading.append("\nSelfweight of Leaf 1, Ymas,Leaf1: " + UnitweightLeaf1.str() + "kN/m^3");
-	Loading.append("\nSelfweight of Leaf 2, Ymas,Leaf2: " + UnitweightLeaf2.str() + "kN/m^3");
+	Loading.append("\nSelf weight of Leaf 1, Ymas,Leaf1: " + UnitweightLeaf1.str() + "kN/m^3");
+	Loading.append("\nSelf weight of Leaf 2, Ymas,Leaf2: " + UnitweightLeaf2.str() + "kN/m^3");
 
 	Loading.append("\n\nWall Length & Openings:");
 	Loading.append("\nLength of Wall, L: " + Length.str() + "mm");
@@ -209,7 +213,7 @@ const std::string DVLR::PrintLoadings()
 		Loading.append(LoadSpreadLength);
 	}
 
-	// Print Load Lap dependant on case - cases determined in DVLR::GetSpreadLoad()
+	// Print Load Lap Dependant on case - cases determined in DVLR::GetSpreadLoad()
 	// Note: Ultimate load determined here
 	std::string LoadLap = "";
 	switch(SpreadCaseStatus)
@@ -404,20 +408,55 @@ const std::string DVLR::PrintSelfWeight()
 	return SelfWt;
 }
 
+const std::string DVLR::PrintSWWallOver()
+{
+	std::ostringstream Height;
+	Height << std::fixed << std::setprecision(2) << (HWall / 1000);
+	std::ostringstream OpHeight;
+	std::ostringstream Ymas;
+	std::ostringstream SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
+	SWOverOpening[0][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf1;
+	SWOverOpening[0][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf2;
+	SWOverOpening[1][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf1;
+	SWOverOpening[1][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf2;
+	std::ostringstream Thickness;
+
+	std::string SelfWt = "\nSelfWeight of wall above opening(s):";
+	SelfWt.append("\nSW,Op = SWeight * (LeafThickness / 1000) * (HeightofWall - OpeningHeight)/1000");
+
+	for (int i = 0; i <= 1; i++) // Opening
+	{
+		SelfWt.append("\nSelf Weight over Opening " + std::to_string(i + 1) + ":");
+		for (int j = 0; j <= 1; j++) // Leaf
+		{
+			OpHeight << std::fixed << std::setprecision(2) << Opening[i].Height;
+			Ymas << std::fixed << std::setprecision(2) << UnitWeight[j];
+			Thickness << std::fixed << std::setprecision(2) << TLeaf[j]/1000;
+
+			SelfWt.append("\n" + Ymas.str() + "kN/m^3 * (" + Thickness.str() + "m * (" + Height.str() + "m - " + OpHeight.str() + "m) = ");
+			SelfWt.append(SWOverOpening[i][j].str() + "kN/m");
+		}
+	}
+
+	std::string SWOO = "";
+	return SWOO;
+}
+
 const std::string DVLR::PrintLoadSpreadLength()
 {
 	// Create String Stream
 	std::ostringstream SpreadLength;
-	std::ostringstream BearingLength;
-	std::ostringstream Pt4Height;
-	Pt4Height << std::fixed << std::setprecision(2) << PtFourH;
+	std::ostringstream WallHeight;
+	WallHeight << std::fixed << std::setprecision(2) << HWall;
+	std::ostringstream Pt6H;
+	WallHeight << std::fixed << std::setprecision(2) << HWall*0.6;
 
-	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + 0.4H < L";
+	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + (OpeningHieght - 0.6H) < L";
+	LoadSpeadLength.append("\n0.6H = 0.6 * " + WallHeight.str() + "mm = " + Pt6H.str() + "mm");
 
 	for (int i = 0; i <= 1; i++)
 	{
 		SpreadLength << std::fixed << std::setprecision(2) << Opening[i].Spread;
-		BearingLength << std::fixed << std::setprecision(2) << Opening[i].BLength;
 
 		if (Opening[i].IsOpening)
 		{
@@ -427,8 +466,6 @@ const std::string DVLR::PrintLoadSpreadLength()
 		// Clear the string streams
 		SpreadLength.clear();
 		SpreadLength.str("");
-		BearingLength.clear();
-		BearingLength.str("");
 	}
 
 	return LoadSpeadLength;
@@ -499,7 +536,7 @@ const std::string DVLR::PrintDoubleLoadSpread()
 		DoubleLoadSpread.append("> ");
 		DoubleLoadSpread.append(Length.str() + "mm");
 		DoubleLoadSpread.append("\nAnd hence both load spreads lap. \nWult = ");
-		DoubleLoadSpread.append("(Wult,TopOfWall + (1.4*Selfweight)) + (Wult,TopOfWall *(OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000)) + ");
+		DoubleLoadSpread.append("(Wult,TopOfWall + (1.4 * Self weight)) + (Wult,TopOfWall *(OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000)) + ");
 		DoubleLoadSpread.append("(Wult,TopOfWall *(OpenWidth2 / 1000)) / (2 * (Lspread2 / 1000))");
 		for (int i = 0; i <= 1; i++)
 		{
@@ -549,7 +586,7 @@ const std::string DVLR::PrintSingleSpread()
 	}
 
 	std::string SingleLoadSpread = "\n\nConsider the load spread from opening " + BiggestOpening + ":";
-	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4*Selfweight)) + (Wult,TopOfWall *(OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
+	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4 * Self weight)) + (Wult,TopOfWall *(OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
 	
 	for (int i = 0; i <= 1; i++)
 	{
