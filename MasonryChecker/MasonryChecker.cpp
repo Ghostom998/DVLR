@@ -372,8 +372,8 @@ Wult DVLR::GetSpreadLoad()
 			WLoad.Message.append("\nConsidering the load concentration from both load spreads lapping.");
 			std::cout << WLoad.Message << std::endl;
 			// Opening array passed as both are required per leaf calculation!
-			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], SwooLF1[2]);
-			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], SwooLF2[2]);
+			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], &SelfWeightOverOpening[2].Leaf1);
+			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], &SelfWeightOverOpening[2].Leaf2);
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadLaps;
 		}
@@ -383,8 +383,8 @@ Wult DVLR::GetSpreadLoad()
 			WLoad.Message = "Load spreads do not lap.";
 			WLoad.Message.append("\nConsidering the load concentration from the greatest load concentration.");
 			std::cout << WLoad.Message << std::endl;
-			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], SwooLF1[2]);
-			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], SwooLF2[2]);
+			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], &SelfWeightOverOpening[2].Leaf1);
+			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], &SelfWeightOverOpening[2].Leaf2);
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadDoesNOTLap;
 		}
@@ -395,8 +395,8 @@ Wult DVLR::GetSpreadLoad()
 		WLoad.Message = "Considering a load concentration from the spread load.";
 		std::cout << WLoad.Message << std::endl;
 
-		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], SwooLF1[2]);
-		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], SwooLF2[2]);
+		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], &SelfWeightOverOpening[2].Leaf1);
+		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], &SelfWeightOverOpening[2].Leaf2);
 		// Tells the print output which case to print i.e. No load spread
 		SpreadCaseStatus = SpreadCase::SglLoadSpread;
 	}
@@ -567,16 +567,13 @@ const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, Structura
 	{
 		return ((UltLoad + (1.4 * Selfweight)) + (((UltLoad + (1.4*SelfWeightOverOpening[0])) * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000))));
 	}
-	else
-	{
-		return ((UltLoad + (1.4 * Selfweight)) + ((UltLoad + (1.4*SelfWeightOverOpening[1])) * (OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000)));
-	}
+	return ((UltLoad + (1.4 * Selfweight)) + ((UltLoad + (1.4*SelfWeightOverOpening[1])) * (OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000)));
 }
 
-const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], Wult SelfWeightOverOpening[2], double SelfWeightOverOpening[2])
+const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening[2])
 {
-	return (UltLoad + (1.4 * Selfweight)) + (UltLoad * (OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000))
-		+ (UltLoad * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000));
+	return (UltLoad + (1.4 * Selfweight)) + ((UltLoad + (1.4*SelfWeightOverOpening[1])) * (OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000))
+		+ ((UltLoad + (1.4*SelfWeightOverOpening[0])) * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000));
 }
 
 const Wult DVLR::GetBeta()

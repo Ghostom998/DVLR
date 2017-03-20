@@ -206,6 +206,10 @@ const std::string DVLR::PrintLoadings()
 	std::string SelfWeight = PrintSelfWeight();
 	Loading.append(SelfWeight);
 
+	// Print calc for selfweight above openings
+	std::string SWWallOver = PrintSWWallOver();
+	Loading.append(SWWallOver);
+
 	// Print Load Spread Length calcs
 	if (SpreadCaseStatus != SpreadCase::NoLoadSpread) //only print if there is a load spread i.e. anything BUT no load spread
 	{
@@ -301,7 +305,7 @@ const std::string DVLR::PrintLoadingsTopWall()
 	return LoadTopOfWall;
 }
 
-// A sub print method
+// TODO - Print opening height
 const std::string DVLR::PrintOpenings()
 {
 	// Setup string streams
@@ -429,17 +433,24 @@ const std::string DVLR::PrintSWWallOver()
 		SelfWt.append("\nSelf Weight over Opening " + std::to_string(i + 1) + ":");
 		for (int j = 0; j <= 1; j++) // Leaf
 		{
-			OpHeight << std::fixed << std::setprecision(2) << Opening[i].Height;
+			OpHeight << std::fixed << std::setprecision(2) << Opening[i].Height / 1000;
 			Ymas << std::fixed << std::setprecision(2) << UnitWeight[j];
 			Thickness << std::fixed << std::setprecision(2) << TLeaf[j]/1000;
 
 			SelfWt.append("\n" + Ymas.str() + "kN/m^3 * (" + Thickness.str() + "m * (" + Height.str() + "m - " + OpHeight.str() + "m) = ");
 			SelfWt.append(SWOverOpening[i][j].str() + "kN/m");
+
+			OpHeight.clear();
+			OpHeight.str("");
+			Ymas.clear();
+			Ymas.str("");
+			Thickness.clear();
+			Thickness.str("");
 		}
 	}
 
-	std::string SWOO = "";
-	return SWOO;
+	//std::string SWOO = "";
+	return SelfWt;
 }
 
 const std::string DVLR::PrintLoadSpreadLength()
@@ -449,7 +460,7 @@ const std::string DVLR::PrintLoadSpreadLength()
 	std::ostringstream WallHeight;
 	WallHeight << std::fixed << std::setprecision(2) << HWall;
 	std::ostringstream Pt6H;
-	WallHeight << std::fixed << std::setprecision(2) << HWall*0.6;
+	Pt6H << std::fixed << std::setprecision(2) << HWall*0.6;
 
 	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + (OpeningHieght - 0.6H) < L";
 	LoadSpeadLength.append("\n0.6H = 0.6 * " + WallHeight.str() + "mm = " + Pt6H.str() + "mm");
@@ -497,6 +508,7 @@ const std::string DVLR::PrintNoLoadSpread()
 }
 
 // Calculate ult load of lapped loads
+// TODO include Self Weight Over Openings
 const std::string DVLR::PrintDoubleLoadSpread()
 {
 	std::ostringstream SpreadLength[2];
@@ -554,6 +566,7 @@ const std::string DVLR::PrintDoubleLoadSpread()
 }
 
 // Calculate ult load of (greatest) spread load
+// TODO include Self Weight Over Openings
 const std::string DVLR::PrintSingleSpread()
 {
 	std::ostringstream SW;
