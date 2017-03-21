@@ -83,8 +83,8 @@ public: // Methods
 		Wult GetSpreadLoad();
 		const void GetSelfWeight();
 		const Wult GetSelfWeightOverOpening(double*, double*, double, double, int);
-		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double SelfWeightOverOpening[2]);
-		const double GetDoubleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double SelfWeightOverOpening[2]);
+		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
+		const double GetDoubleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
 		Wult GetUltLineLoad(double*);
 
 	const Wult GetBeta();
@@ -100,7 +100,7 @@ public: // Methods
 
 	const double GetMinFk(double&, double&, double&, double&, double&);
 
-	// TODO Method to determine minFk based on bearing beneath the lintel const CheckLintelBearing();
+	const double CheckLintelBearing();
 	// BLength < 2t = 1.5fk/ym  ;  BLength < 3t => 1.25fk/ym
 
 // Methods to print *.txt output

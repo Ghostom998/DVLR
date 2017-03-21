@@ -508,7 +508,6 @@ const std::string DVLR::PrintNoLoadSpread()
 }
 
 // Calculate ult load of lapped loads
-// TODO include Self Weight Over Openings
 const std::string DVLR::PrintDoubleLoadSpread()
 {
 	std::ostringstream SpreadLength[2];
@@ -544,18 +543,23 @@ const std::string DVLR::PrintDoubleLoadSpread()
 		std::ostringstream Wult[2];
 		Wult[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
 		Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
+		std::ostringstream SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
+		SWOverOpening[0][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf1;
+		SWOverOpening[0][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf2;
+		SWOverOpening[1][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf1;
+		SWOverOpening[1][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf2;
 
 		DoubleLoadSpread.append("> ");
 		DoubleLoadSpread.append(Length.str() + "mm");
 		DoubleLoadSpread.append("\nAnd hence both load spreads lap. \nWult = ");
-		DoubleLoadSpread.append("(Wult,TopOfWall + (1.4 * Self weight)) + (Wult,TopOfWall *(OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000)) + ");
-		DoubleLoadSpread.append("(Wult,TopOfWall *(OpenWidth2 / 1000)) / (2 * (Lspread2 / 1000))");
-		for (int i = 0; i <= 1; i++)
+		DoubleLoadSpread.append("(Wult,TopOfWall + (1.4 * Selfweight@0.4H)) + (Wult,TopOfWall + (1.4*SelfWeightOverOpening)) * (OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000)) + ");
+		DoubleLoadSpread.append("(Wult,TopOfWall * (OpenWidth2 / 1000)) / (2 * (Lspread2 / 1000))");
+		for (int i = 0; i <= 1; i++) // Loops per Leaf
 		{
 			SW << std::fixed << std::setprecision(2) << SelfWeight[i];
 			DoubleLoadSpread.append("\nWult,Leaf" + std::to_string(i + 1) + " = (");
-			DoubleLoadSpread.append(UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + (" + UltTopWall[i].str() + "kN/m *(" + OpeningWidth[0].str() + "mm / 1000)) ");
-			DoubleLoadSpread.append("/ (2 * (" + SpreadLength[0].str() + "mm / 1000)) + (" + UltTopWall[i].str() + " *(" + OpeningWidth[1].str() + "mm / 1000)) / (2 * (");
+			DoubleLoadSpread.append(UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + ((" + UltTopWall[i].str() + "kN/m + (1.4 * " + SWOverOpening[0][i].str() + "kN/m)) * (" + OpeningWidth[0].str() + "mm / 1000)) ");
+			DoubleLoadSpread.append("/ (2 * (" + SpreadLength[0].str() + "mm / 1000)) + (" + UltTopWall[i].str() + "kN/m + (1.4 * " + SWOverOpening[1][i].str() + "kN/m)) * (" + OpeningWidth[1].str() + "mm / 1000)) / (2 * (");
 			DoubleLoadSpread.append(SpreadLength[1].str() + "mm / 1000))");
 			DoubleLoadSpread.append("\n= " + Wult[i].str() + "kN/m");
 			SW.clear();
@@ -566,7 +570,6 @@ const std::string DVLR::PrintDoubleLoadSpread()
 }
 
 // Calculate ult load of (greatest) spread load
-// TODO include Self Weight Over Openings
 const std::string DVLR::PrintSingleSpread()
 {
 	std::ostringstream SW;
@@ -583,6 +586,7 @@ const std::string DVLR::PrintSingleSpread()
 	Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
 	std::ostringstream OpeningWidth;
 	std::ostringstream SpreadLength;
+	std::ostringstream SWOO[2];
 
 	// Assign string stream operators based on greatest load
 	if (Opening[0].Width >= Opening[1].Width)
@@ -590,20 +594,27 @@ const std::string DVLR::PrintSingleSpread()
 		BiggestOpening = "1";
 		SpreadLength << std::fixed << std::setprecision(2) << Opening[0].Spread;
 		OpeningWidth << std::fixed << std::setprecision(2) << Opening[0].Width;
+		SWOO[0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf1;
+		SWOO[1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf2;
 	}
 	else
 	{
 		BiggestOpening = "2";
 		SpreadLength << std::fixed << std::setprecision(2) << Opening[1].Spread;
 		OpeningWidth << std::fixed << std::setprecision(2) << Opening[1].Width;
+		SWOO[0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf1;
+		SWOO[1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf2;
 	}
 
+	//return ((UltLoad + (1.4 * Selfweight)) + (((UltLoad + (1.4*SelfWeightOverOpening[0])) * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000))));
+
 	std::string SingleLoadSpread = "\n\nConsider the load spread from opening " + BiggestOpening + ":";
-	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4 * Self weight)) + (Wult,TopOfWall *(OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
+	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4 * Selfweight@0.4H)) + ((Wult,TopOfWall + (1.4*SelfWeightOverOpening)) * (OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
 	
-	for (int i = 0; i <= 1; i++)
+	for (int i = 0; i <= 1; i++) // Loops per Leaf
 	{
-		SingleLoadSpread.append("\n" + UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + (" + UltTopWall[i].str() + "kN/m *(" + OpeningWidth.str() + "mm / 1000)) ");
+		SW << std::fixed << std::setprecision(2) << SelfWeight[i];
+		SingleLoadSpread.append("\n" + UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + ((" + UltTopWall[i].str() + "kN/m + (1.4 * " + SWOO[i].str() + "kN/m)) * (" + OpeningWidth.str() + "mm / 1000)) ");
 		SingleLoadSpread.append("/ (2 * (" + SpreadLength.str() + "mm / 1000)) = ");
 		SingleLoadSpread.append(Wult[i].str() + "kN/m");
 		SW.clear();
