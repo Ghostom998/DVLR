@@ -4,25 +4,17 @@
 #include <string>
 
 // Ultimate loading per leaf. Allows functions to return two values. Values initialized to 0
-struct Wult
+struct TwoLeafStruct
 {
 	double Leaf1 = 0;
 	double Leaf2 = 0;
 	std::string Message = "";
 };
 
-// Required Fk per leaf. Allows functions to return two values. Values initialized to 0
-struct Fk
-{
-	double Leaf1 = 0;
-	double Leaf2 = 0;
-};
-
 // Opening object created in the DVLR class
 struct StructuralOpenings
 {
-	// Assumes there is no opening unless the user specifically inputs otherwise
-	bool IsOpening = false; 
+	bool IsOpening = false; // Assumes there is no opening unless the user specifically inputs otherwise
 	double Width = 0;
 	double BLength = 0;
 	double Height = 0;
@@ -74,36 +66,36 @@ public: // Methods
 		int GetConstrControl();
 		int GetManufControl();
 
-	// TODO Include for out of plane wall load I.E. beam perpendicular to wall
-	// Point load with independent load. Maybe ask user if beam is present to prevent unnecessary output.
-	Wult GetUltLoad();
+	// TODO - Include for out of plane wall load I.E. beam perpendicular to wall
+	// Point load with independent load. Maybe ask user if beam is present to prevent unnecessary input/output.
+	TwoLeafStruct GetUltLoad();
 		void GetLoads();
 		void GetOpenings();
 			double SpreadLength(double, double, double, double, int);
-		Wult GetSpreadLoad();
+		TwoLeafStruct GetSpreadLoad();
 		const void GetSelfWeight();
-		const Wult GetSelfWeightOverOpening(double*, double*, double, double, int);
+		const TwoLeafStruct GetSelfWeightOverOpening(double*, double*, double, double, int);
 		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
 		const double GetDoubleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
-		Wult GetUltLineLoad(double*);
+		TwoLeafStruct GetUltLineLoad(double*);
 
-	const Wult GetBeta();
-		
+	const TwoLeafStruct GetBeta();
 		const bool IsEccentricityDefault();
 		const double GetUserEccentricity(double, int);
 		const double CustomBearing(double, int);
 		const double GetCustomEccentricity(double, int);
 		const double GetEx(double, double, double, double, double, double);
 
-	const Wult GetSmallAreaFactor();
+	const TwoLeafStruct GetSmallAreaFactor();
 		const double GetSAF(double&, double&);
 
 	const double GetMinFk(double&, double&, double&, double&, double&);
 
-	const double CheckLintelBearing();
-	// BLength < 2t = 1.5fk/ym  ;  BLength < 3t => 1.25fk/ym
+	const TwoLeafStruct CheckLintelBearing(double & BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SelfWeightOverOpening, double& OpLength, double& SafetyFactor);
+		const double GetMinBearCoeff(double& BLength, double LeafThickness);
+		const double GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength);
 
-// Methods to print *.txt output
+// ### - Methods to print *.txt output - ###################################################################################################################################################
 
 	// The main print method. Controls and checks the other sub methods listed below.
 	const int PrintToFile();
@@ -129,6 +121,7 @@ public: // Methods
 			const std::string PrintDoubleLoadSpread();
 			const std::string PrintSingleSpread();
 
+		const std::string PrintMinFkSup();
 		// Print the eccentricity, SAF and the capacity reduction factor
 		const std::string PrintEccentricity();
 
@@ -179,11 +172,11 @@ private: // Members
 	/// Masonry Self weight
 	double UnitWeight[2] = { 0 , 0 };
 	double SelfWeight[2] = { 0 , 0 };
-	Wult SelfWeightOverOpening[2] = { 0 , 0 };
+	TwoLeafStruct SelfWeightOverOpening[2] = { 0 , 0 };
 	/// Ultimate Load
-	Wult WultLoad;
+	TwoLeafStruct WultLoad;
 	/// Factored load over wall w/o wall self weight and load concentration
-	Wult LoadOverWall;
+	TwoLeafStruct LoadOverWall;
 	/// Loaded Eccentricity
 	UserEccentricity Selection = UserEccentricity::Invalid_Status;
 	double CustomEccentricity[2] = { 0 , 0 };
@@ -195,11 +188,11 @@ private: // Members
 	/// Custom Bearing Length of joists / slab
 	double BearingLength[2] = { 0 , 0 };
 	/// Capacity reduction factor
-	Wult Beta;
+	TwoLeafStruct Beta;
 	/// Small area factor
-	Wult SAF;
+	TwoLeafStruct SAF;
 	/// Minimum required masonry strength
-	Fk MinFk;
+	TwoLeafStruct MinFk;
 	/// Displays the correct message in the text output
 	std::string SpreadLengthMessage[2];
 	/// Displays the greatest opening size to tell the user which is causing the greatest load concentration.
@@ -207,6 +200,9 @@ private: // Members
 	/// A default case which should indicate whether or not the program is properly assigning the case
 	SpreadCase SpreadCaseStatus = SpreadCase::Invalid_status;
 
+	// Applied bearing stress beneath the lintel bearing
+	TwoLeafStruct MinBStrength[2]; // first member => both leaves of opening 1, second member => both leaves of opening 2
+	TwoLeafStruct MinBearCoeff;
 };
 
 #endif // DVLR_H

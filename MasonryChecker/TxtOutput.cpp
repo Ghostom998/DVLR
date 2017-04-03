@@ -49,6 +49,11 @@ const int DVLR::PrintToFile()
 	// Write loadings text to file
 	writer << Loadings << std::endl;
 
+	// Build MinFk at Support text
+	std::string MinFkSup = PrintMinFkSup();
+	// Write Min Fk at Support to File
+	writer << MinFkSup << std::endl;
+
 	// Build Eccentricity text
 	std::string Eccentricity = PrintEccentricity();
 	// Write PSF text to file
@@ -80,6 +85,7 @@ const int DVLR::PrintToFile()
 		{
 			#ifdef _WIN32
 			// Build the command to pass to system
+			std::cout << "Note that Notepad must be closed before the program can be terminated." << std::endl;
 			std::string Command = "notepad.exe " + FileName + ".txt";
 			system(Command.c_str());
 			std::exit(0);
@@ -114,7 +120,6 @@ bool OpenFile()
 	return (Response[0] == 'y') || (Response[0] == 'Y');
 }
 
-// A main print method
 const std::string DVLR::PrintIntro(std::string NameOfFile)
 {
 	std::string Introduction = "MasonryChecker. \nby Thomas Roberts, CWA.";
@@ -123,7 +128,6 @@ const std::string DVLR::PrintIntro(std::string NameOfFile)
 	return Introduction;
 }
 
-// A main print method
 const std::string DVLR::PrintSlenderness()
 {
 	// Setup up string stream variables to round the inputs to 2 decimal places and convert numbers to strings
@@ -157,7 +161,6 @@ const std::string DVLR::PrintSlenderness()
 	return Slenderness;
 }
 
-// A main print method
 const std::string DVLR::PrintPSF()
 {
 	std::ostringstream SafetyFactor;
@@ -170,7 +173,6 @@ const std::string DVLR::PrintPSF()
 	return PartialSafetyFactor;
 }
 
-// A main print method
 const std::string DVLR::PrintLoadings()
 {
 	std::ostringstream UnitweightLeaf1;
@@ -248,7 +250,6 @@ const std::string DVLR::PrintLoadings()
 }
 
 // TODO Print Eccentricity results
-// A main print method
 const std::string DVLR::PrintEccentricity()
 {
 	std::string Eccentricity = "";
@@ -263,7 +264,6 @@ const std::string DVLR::PrintSAF()
 }
 
 // TODO Print minimum Fk required
-// A main print method
 const std::string DVLR::PrintMinFk()
 {
 	std::string MinFkResult = "";
@@ -577,7 +577,6 @@ const std::string DVLR::PrintSingleSpread()
 	Length << std::fixed << std::setprecision(2) << L;
 
 	// Values based on greatest opening size
-	
 	std::ostringstream UltTopWall[2];
 	UltTopWall[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
 	UltTopWall[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
@@ -621,4 +620,18 @@ const std::string DVLR::PrintSingleSpread()
 		SW.str("");
 	}
 	return SingleLoadSpread;
+}
+
+// TODO - Finish 
+const std::string DVLR::PrintMinFkSup()
+{
+	// Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF
+	// Suggested to make a matrix array to deal with different leaves at different opening and fit in loops
+
+	std::string MinFkSup = "";
+
+	// Print Load at Support Calc
+	// Print MinFkSup
+
+	return MinFkSup;
 }
