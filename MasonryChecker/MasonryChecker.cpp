@@ -522,10 +522,10 @@ void DVLR::GetOpenings()
 }
 
 // TODO - Move to TxtOutput.cpp ???
-double DVLR::SpreadLength(double BearingLength, double Pt6H, double Length, double OpeningHieght, int i)
+const double DVLR::SpreadLength(double BearingLength, double Pt6H, double Length, double OpeningHieght, int i)
 {
 	double Spread;
-	if ((OpeningHieght - Pt6H) < 0)
+	if ((OpeningHieght - Pt6H) <= 0)
 	{
 		Spread = 0;
 	}
@@ -535,29 +535,21 @@ double DVLR::SpreadLength(double BearingLength, double Pt6H, double Length, doub
 		Spread = BearingLength + (OpeningHieght - Pt6H);
 	}
 
-	std::ostringstream SpreadLength;
-	SpreadLength << std::fixed << std::setprecision(2) << Spread;
-	std::ostringstream WallLength;
-	WallLength << std::fixed << std::setprecision(2) << Length;
-	std::ostringstream PointSixH;
-	PointSixH << std::fixed << std::setprecision(2) << Pt6H;
-	std::ostringstream OpHieght;
-	OpHieght << std::fixed << std::setprecision(2) << OpeningHieght;
-	std::ostringstream Blength;
-	Blength << std::fixed << std::setprecision(2) << BearingLength;
+	std::string SpreadLength = ConvertToString( Spread, 2);
+	std::string WallLength = ConvertToString(Length, 2);
+	std::string PointSixH = ConvertToString(Pt6H, 2);
+	std::string OpHieght = ConvertToString(OpeningHieght, 2);
+	std::string Blength = ConvertToString(BearingLength, 2);
 
-	SpreadLengthMessage[i] = Blength.str() + "mm + (" + OpHieght.str() + "mm - " + PointSixH.str() + "mm) = ";
+	SpreadLengthMessage[i] = Blength + "mm + (" + OpHieght + "mm - " + PointSixH + "mm) = ";
 
 	if (Spread > Length)
 	{
-		SpreadLengthMessage[i].append(SpreadLength.str() + "mm > " + WallLength.str() + "mm");
+		SpreadLengthMessage[i].append(SpreadLength + "mm > " + WallLength + "mm");
 		return Length;
 	}
-	else
-	{
-		SpreadLengthMessage[i].append(SpreadLength.str() + "mm < " + WallLength.str() + "mm");
+		SpreadLengthMessage[i].append(SpreadLength + "mm < " + WallLength + "mm");
 		return Spread;
-	}
 }
 
 const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening1, double SelfWeightOverOpening2)
@@ -662,20 +654,16 @@ const bool DVLR::IsEccentricityDefault()
 		{
 			return true;
 		}
-		else if (IsEccentricityDefault == "No" || IsEccentricityDefault == "no" || IsEccentricityDefault == "N" || IsEccentricityDefault == "n")
+		if (IsEccentricityDefault == "No" || IsEccentricityDefault == "no" || IsEccentricityDefault == "N" || IsEccentricityDefault == "n")
 		{
 			return false;
 		}
-		else if (IsEccentricityDefault == "Help" || IsEccentricityDefault == "help" || IsEccentricityDefault == "H" || IsEccentricityDefault == "h")
+		if (IsEccentricityDefault == "Help" || IsEccentricityDefault == "help" || IsEccentricityDefault == "H" || IsEccentricityDefault == "h")
 		{
 			return false;
 		}
-		else
-		{
 			std::cout << "Please enter a valid input." << std::endl;
 			IsValid = false;
-			continue;
-		}
 	}
 	while (!IsValid);
 	return false;
@@ -685,9 +673,7 @@ const double DVLR::GetUserEccentricity(double Thickness, int Leaf)
 {
 	// check if input is a number
 	bool IsValid;
-	int UserSelection = 0;
-	double NotFullBearing;
-	double Custom;
+	auto UserSelection = 0;
 
 	do
 	{
@@ -736,11 +722,11 @@ const double DVLR::GetUserEccentricity(double Thickness, int Leaf)
 			return (Thickness / 2);
 		case 4:
 			Selection = UserEccentricity::NotFullBearing;
-			NotFullBearing = CustomBearing(Thickness, Leaf);
+			double NotFullBearing = CustomBearing(Thickness, Leaf);
 			return NotFullBearing;
 		case 5:
 			Selection = UserEccentricity::Custom;
-			Custom = GetCustomEccentricity(Thickness, Leaf);
+			double Custom = GetCustomEccentricity(Thickness, Leaf);
 			return Custom;
 		default:
 			// If input is not a valid case, ask the user for a valid case.
@@ -877,20 +863,16 @@ const TwoLeafStruct DVLR::CheckLintelBearing(double& BLength, double LeafThickne
 
 const double DVLR::GetMinBearCoeff(double& BLength, double LeafThickness)
 {
-	double Coeff = 0;
 		if (BLength < (2 * LeafThickness))
 		{
-			Coeff = 1.50;
+			return 1.50;
 		}
-		else if (BLength < (3 * LeafThickness))
+		if (BLength < (3 * LeafThickness))
 		{
-			Coeff = 1.25;
+			return 1.25;
 		}
-		else
-		{
-			Coeff = 1.00;
-		}
-	return Coeff;
+	// Default	
+	return 1.00;
 }
 
 const double DVLR::GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength) {return (Wult+SWOverOpening)*(((OpLength/1000)*0.5)+(BLength/1000));}

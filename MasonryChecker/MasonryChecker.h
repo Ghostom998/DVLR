@@ -1,7 +1,29 @@
 #ifndef DVLR_H // Inclusion guards
 #define DVLR_H
 
+// TODO - Create 1 wall object per leaf as an array to cleanup code, make class cleaner and make TwoLeafStruct redundant
+
 #include <string>
+#include <sstream>		// String Stream: allows numbers to be cast as strings (i.e. to_string() )
+#include <iomanip>      // std::setprecision -> allows us to reduce the decimal places in the string stream
+
+// Global Function - Turns any value into a string
+template <class T>
+std::string ConvertToString(T & Num, int DecPlaces)
+{
+	std::ostringstream NewStringStream;
+	NewStringStream << std::fixed << std::setprecision(DecPlaces) << Num;
+	return NewStringStream.str();
+}
+// Global Function - Turns any value into a string with a multiplier for unit conversion, etc.
+template <class T>
+std::string ConvertToString(T & Num, int DecPlaces, float Multiplier)
+{
+	std::ostringstream NewStringStream;
+	NewStringStream << std::fixed << std::setprecision(DecPlaces) << Num*Multiplier;
+	return NewStringStream.str();
+}
+
 
 // Ultimate loading per leaf. Allows functions to return two values. Values initialized to 0
 struct TwoLeafStruct
@@ -71,7 +93,7 @@ public: // Methods
 	TwoLeafStruct GetUltLoad();
 		void GetLoads();
 		void GetOpenings();
-			double SpreadLength(double, double, double, double, int);
+			const double SpreadLength(double, double, double, double, int);
 		TwoLeafStruct GetSpreadLoad();
 		const void GetSelfWeight();
 		const TwoLeafStruct GetSelfWeightOverOpening(double*, double*, double, double, int);

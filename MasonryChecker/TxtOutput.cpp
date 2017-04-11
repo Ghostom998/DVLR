@@ -2,8 +2,6 @@
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string>		// Allows strings to be used
-#include <iomanip>      // std::setprecision -> allows us to reduce the decimal places in the string stream
-#include <sstream>		// String Stream: allows numbers to be cast as strings (i.e. to_string() )
 #include <fstream>		// File Stream: allows input/output to file
 
 bool OpenFile();
@@ -131,70 +129,56 @@ const std::string DVLR::PrintIntro(std::string NameOfFile)
 const std::string DVLR::PrintSlenderness()
 {
 	// Setup up string stream variables to round the inputs to 2 decimal places and convert numbers to strings
-	std::ostringstream t1;
-	t1 << std::fixed << std::setprecision(2) << TLeaf[0];
-	std::ostringstream t2;
-	t2 << std::fixed << std::setprecision(2) << TLeaf[1];
-	std::ostringstream H;
-	H << std::fixed << std::setprecision(2) << HWall;
-	std::ostringstream RFactor;
-	RFactor << std::fixed << std::setprecision(2) << RestraintFactor;
-	std::ostringstream EffectiveThickness;
-	EffectiveThickness << std::fixed << std::setprecision(2) << Teff;
-	std::ostringstream EffectiveHeight;
-	EffectiveHeight << std::fixed << std::setprecision(2) << Heff;
-	std::ostringstream SlendernessRatio;
-	SlendernessRatio << std::fixed << std::setprecision(2) << SR;
+	std::string t1 = ConvertToString( TLeaf[0], 2);
+	std::string t2 = ConvertToString( TLeaf[1], 2);
+	std::string H = ConvertToString( HWall, 2);
+	std::string RFactor = ConvertToString( RestraintFactor, 2);
+	std::string EffectiveThickness = ConvertToString( Teff, 2);
+	std::string EffectiveHeight = ConvertToString( Heff, 2);
+	std::string SlendernessRatio = ConvertToString( SR, 2);
 
 	std::string Slenderness = "\nConsider the Slenderness Ratio:";
-	Slenderness.append("\nThickness of Leaf 1, t1: " + t1.str() + "mm");
-	Slenderness.append("\nThickness of Leaf 2, t2: " + t2.str() + "mm");
-	Slenderness.append("\nHeight of Wall, H: " + H.str() + "mm");
+	Slenderness.append("\nThickness of Leaf 1, t1: " + t1 + "mm");
+	Slenderness.append("\nThickness of Leaf 2, t2: " + t2 + "mm");
+	Slenderness.append("\nHeight of Wall, H: " + H + "mm");
 	Slenderness.append("\nRestraint condition at the top of the wall is " + RestraintCondition + ".");
-	Slenderness.append("\nRestraint factor to clause 28.3.1.1., RF: " + RFactor.str());
-
-	Slenderness.append("\nEffective Thickness, Teff = " + TeffEquation + EffectiveThickness.str() + "mm");
-	Slenderness.append("\nEffective Height, Heff = RF*H = " + RFactor.str() + "*" + H.str() + " = " + EffectiveHeight.str() + "mm");
-	Slenderness.append("\nHence,\nSlenderness Ratio, SR = Heff/Teff = " + EffectiveHeight.str() + "/" + EffectiveThickness.str());
-	Slenderness.append(" = " + SlendernessRatio.str() + " [-]");
+	Slenderness.append("\nRestraint factor to clause 28.3.1.1., RF: " + RFactor);
+	Slenderness.append("\nEffective Thickness, Teff = " + TeffEquation + EffectiveThickness + "mm");
+	Slenderness.append("\nEffective Height, Heff = RF*H = " + RFactor + "*" + H + " = " + EffectiveHeight + "mm");
+	Slenderness.append("\nHence,\nSlenderness Ratio, SR = Heff/Teff = " + EffectiveHeight + "/" + EffectiveThickness);
+	Slenderness.append(" = " + SlendernessRatio + " [-]");
 
 	return Slenderness;
 }
 
 const std::string DVLR::PrintPSF()
 {
-	std::ostringstream SafetyFactor;
-	SafetyFactor << std::fixed << std::setprecision(1) << PSF;
+	std::string SafetyFactor = ConvertToString( PSF, 1 );
 
 	std::string PartialSafetyFactor = "\nConsider a Partial Safety Factor:";
 	PartialSafetyFactor.append("\nConstruction control is " + ConstructionControl + ".");
 	PartialSafetyFactor.append("\nManufacture control is " + ManufactureControl + ".");
-	PartialSafetyFactor.append("\nHence,\nPartial Safety from table 4a, PSF: " + SafetyFactor.str() + " [-]");
+	PartialSafetyFactor.append("\nHence,\nPartial Safety from table 4a, PSF: " + SafetyFactor + " [-]");
 	return PartialSafetyFactor;
 }
 
 const std::string DVLR::PrintLoadings()
 {
-	std::ostringstream UnitweightLeaf1;
-	UnitweightLeaf1 << std::fixed << std::setprecision(2) << UnitWeight[0];
-	std::ostringstream UnitweightLeaf2;
-	UnitweightLeaf2 << std::fixed << std::setprecision(2) << UnitWeight[1];
-	std::ostringstream Length;
-	Length << std::fixed << std::setprecision(2) << L;
-
-	std::ostringstream PointFourH;
-	PointFourH << std::fixed << std::setprecision(1) << PtFourH;
-
+	std::string Length = ConvertToString( L, 2 );
+	std::string PointFourH = ConvertToString( PtFourH, 2);
+	
 	// Print user input characteristic loads
 	std::string Loading = "\nConsider the characteristic loading at the top of the wall: ";
 	std::string LoadAtTopOfWall = PrintLoadingsTopWall();
 	Loading.append(LoadAtTopOfWall);
 
-	Loading.append("\nSelf weight of Leaf 1, Ymas,Leaf1: " + UnitweightLeaf1.str() + "kN/m^3");
-	Loading.append("\nSelf weight of Leaf 2, Ymas,Leaf2: " + UnitweightLeaf2.str() + "kN/m^3");
-
+	for (int i = 0; i <= 1; i++)
+	{
+		std::string UnitweightLeaf = ConvertToString(UnitWeight[i], 2);
+		Loading.append("\nSelf weight of Leaf " + std::to_string(i+1) + ", Ymas,Leaf" + std::to_string(i+1) + ": " + UnitweightLeaf + "kN/m^3");
+	}
 	Loading.append("\n\nWall Length & Openings:");
-	Loading.append("\nLength of Wall, L: " + Length.str() + "mm");
+	Loading.append("\nLength of Wall, L: " + Length + "mm");
 
 	// Print user input openings and bearing lengths
 	std::string Openings = PrintOpenings();
@@ -221,7 +205,7 @@ const std::string DVLR::PrintLoadings()
 
 	// Print Load Lap Dependant on case - cases determined in DVLR::GetSpreadLoad()
 	// Note: Ultimate load determined here
-	std::string LoadLap = "";
+	std::string LoadLap;
 	switch(SpreadCaseStatus)
 	{
 	case SpreadCase::NoLoadSpread:
@@ -273,9 +257,6 @@ const std::string DVLR::PrintMinFk()
 // A sub print method
 const std::string DVLR::PrintLoadingsTopWall()
 {
-	// Creates a string stream to convert loads from numbers to strings
-	std::ostringstream Loads;
-
 	std::string LoadTopOfWall = "";
 	// Display the load in a similar was as we did in the console.
 	int x = 0;
@@ -292,11 +273,8 @@ const std::string DVLR::PrintLoadingsTopWall()
 				else { LoadTopOfWall.append("\n\tLive load: "); }
 
 				// Write the loads out as a string
-				Loads << std::fixed << std::setprecision(2) << Load[x];
-				LoadTopOfWall.append(Loads.str() + "kN/m");
-				// Clears the string stream for the next usage
-				Loads.clear();
-				Loads.str("");
+				 std::string Loads = ConvertToString(Load[x], 2);
+				LoadTopOfWall.append(Loads + "kN/m");
 				// Progresses to the next member in Load[] array
 				x++;
 			}
@@ -308,9 +286,6 @@ const std::string DVLR::PrintLoadingsTopWall()
 // TODO - Print opening height
 const std::string DVLR::PrintOpenings()
 {
-	// Setup string streams
-	std::ostringstream OpeningWidth;
-	std::ostringstream BearingLength;
 	// Setup write string
 	std::string POpening = "";
 	for (int i = 0; i <= 1; i++)
@@ -319,18 +294,11 @@ const std::string DVLR::PrintOpenings()
 		if (Opening[i].IsOpening)
 		{
 			// Assign the string streams
-			OpeningWidth << std::fixed << std::setprecision(2) << Opening[i].Width;
-			BearingLength << std::fixed << std::setprecision(2) << Opening[i].BLength;
-
+			std::string OpeningWidth = ConvertToString( Opening[i].Width, 2);
+			std::string BearingLength = ConvertToString( Opening[i].BLength, 2);
 			// Write to file
-			POpening.append("\nOpening Width, OpWidth,Leaf" + std::to_string(i + 1) + ": " + OpeningWidth.str() + "mm");
-			POpening.append("\nBearing Length of member supporting Opening, BLength,Leaf" + std::to_string(i + 1) + ": " + BearingLength.str() + "mm");
-
-			// Clears the string stream for the next usage
-			OpeningWidth.clear();
-			OpeningWidth.str("");
-			BearingLength.clear();
-			BearingLength.str("");
+			POpening.append("\nOpening Width, OpWidth,Leaf" + std::to_string(i + 1) + ": " + OpeningWidth + "mm");
+			POpening.append("\nBearing Length of member supporting Opening, BLength,Leaf" + std::to_string(i + 1) + ": " + BearingLength + "mm");
 		}
 	}
 	return POpening;
@@ -338,75 +306,44 @@ const std::string DVLR::PrintOpenings()
 
 const std::string DVLR::PrintUltLineLoadTopWall()
 {
-	std::ostringstream EccDL;
-	std::ostringstream EccLL;
-	std::ostringstream ConcDL;
-	std::ostringstream ConcLL;
-
-	std::ostringstream UltLineLoad[2];
-	UltLineLoad[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
-	UltLineLoad[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
+	std::string UltLineLoad[2] = { ConvertToString(LoadOverWall.Leaf1, 2) ,ConvertToString(LoadOverWall.Leaf2, 2) };
 
 	int x = 0;
 	std::string UltLineLoadTopWall = "\n\nUltimate Line Load at the top of the wall = 1.4(Ecc,DL + Conc,DL) + 1.6(Ecc,LL + Conc,LL)";
 	for (int i = 0; i <= 1; i++)
 	{
-		EccDL << std::fixed << std::setprecision(2) << Load[ x ];
-		EccLL << std::fixed << std::setprecision(2) << Load[x + 1];
-		ConcDL << std::fixed << std::setprecision(2) << Load[x + 2];
-		ConcLL << std::fixed << std::setprecision(2) << Load[x + 3];
+		std::string EccDL = ConvertToString( Load[ x ], 2);
+		std::string EccLL = ConvertToString( Load[x + 1], 2);
+		std::string ConcDL = ConvertToString( Load[x + 2], 2);
+		std::string ConcLL = ConvertToString( Load[x + 3], 2);
 
-		UltLineLoadTopWall.append("\nWult,TopOfWall,Leaf " + std::to_string(i + 1) + " = 1.4(" + EccDL.str());
-		UltLineLoadTopWall.append("kN/m + " + ConcDL.str() + "kN/m) + 1.6(" + EccLL.str() + "kN/m + " );
-		UltLineLoadTopWall.append(ConcLL.str() + "kN/m) = " + UltLineLoad[i].str() + "kN/m");
+		UltLineLoadTopWall.append("\nWult,TopOfWall,Leaf " + std::to_string(i + 1) + " = 1.4(" + EccDL);
+		UltLineLoadTopWall.append("kN/m + " + ConcDL + "kN/m) + 1.6(" + EccLL + "kN/m + " );
+		UltLineLoadTopWall.append(ConcLL + "kN/m) = " + UltLineLoad[i] + "kN/m");
 
 		// Increments the load array access by 4 spaces for the next leaf
 		x += 4;
-
-		// Clears the string stream for the next usage
-		EccDL.clear();
-		EccDL.str("");
-		EccLL.clear();
-		EccLL.str("");
-		ConcDL.clear();
-		ConcDL.str("");
-		ConcLL.clear();
-		ConcLL.str("");
 	}
 	return UltLineLoadTopWall;
 }
 
 const std::string DVLR::PrintSelfWeight()
 {
-	std::ostringstream Height;
-	Height << std::fixed << std::setprecision(2) << (HWall / 1000);
-	std::ostringstream Pt4Height;
-	Pt4Height << std::fixed << std::setprecision(2) << PtFourH;
-	std::ostringstream Ymas;
-	std::ostringstream Swt;
-	std::ostringstream Thickness;
+	std::string Height = ConvertToString(HWall, 2, 0.001);
+	std::string Pt4Height = ConvertToString(PtFourH, 2);
 
 	std::string SelfWt = "\n\nSelfWeight at 0.4H from the top of the wall:";
-	SelfWt.append("\n0.4H = 0.4*" + Height.str() + "m = " + Pt4Height.str() + "m");
+	SelfWt.append("\n0.4H = 0.4*" + Height + "m = " + Pt4Height + "m");
 	SelfWt.append("\nSW,0.4H = Ymas*0.4H*t");
 
 	for (int i = 0; i <= 1; i++)
 	{
 		// Create String stream
-		Ymas << std::fixed << std::setprecision(2) << UnitWeight[i];
-		Swt << std::fixed << std::setprecision(2) << SelfWeight[i];
-		Thickness << std::fixed << std::setprecision(2) << TLeaf[i];
-
+		std::string Ymas = ConvertToString( UnitWeight[i], 2);
+		std::string Swt = ConvertToString( SelfWeight[i], 2);
+		std::string Thickness = ConvertToString( TLeaf[i], 2);
 		// Write to file
-		SelfWt.append("\nSW,0.4H,Leaf" + std::to_string(i+1) + " = " + Ymas.str() + "kN/m^3 * (" + Thickness.str() + " / 1000)m * " + Pt4Height.str() + "m = " + Swt.str() + "kN/m");
-
-		// Clear String stream
-		Ymas.clear();
-		Ymas.str("");
-		Swt.clear();
-		Swt.str("");
-		Thickness.clear();
-		Thickness.str("");
+		SelfWt.append("\nSW,0.4H,Leaf" + std::to_string(i+1) + " = " + Ymas + "kN/m^3 * (" + Thickness + " / 1000)m * " + Pt4Height + "m = " + Swt + "kN/m");
 	}
 
 	return SelfWt;
@@ -414,69 +351,50 @@ const std::string DVLR::PrintSelfWeight()
 
 const std::string DVLR::PrintSWWallOver()
 {
-	std::ostringstream Height;
-	Height << std::fixed << std::setprecision(2) << (HWall / 1000);
-	std::ostringstream OpHeight;
-	std::ostringstream Ymas;
-	std::ostringstream SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
-	SWOverOpening[0][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf1;
-	SWOverOpening[0][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf2;
-	SWOverOpening[1][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf1;
-	SWOverOpening[1][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf2;
-	std::ostringstream Thickness;
+	std::string Height = ConvertToString(HWall, 2, 0.001);
+	std::string SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
+	SWOverOpening[0][0] = ConvertToString( SelfWeightOverOpening[0].Leaf1, 2);
+	SWOverOpening[0][1] = ConvertToString( SelfWeightOverOpening[0].Leaf2, 2);
+	SWOverOpening[1][0] = ConvertToString( SelfWeightOverOpening[1].Leaf1, 2);
+	SWOverOpening[1][1] = ConvertToString( SelfWeightOverOpening[1].Leaf2, 2);
 
 	std::string SelfWt = "\nSelfWeight of wall above opening(s):";
 	SelfWt.append("\nSW,Op = SWeight * (LeafThickness / 1000) * (HeightofWall - OpeningHeight)/1000");
 
-	for (int i = 0; i <= 1; i++) // Opening
+	for (int i = 0; i <= 1; i++) // Opening No.#
 	{
 		SelfWt.append("\nSelf Weight over Opening " + std::to_string(i + 1) + ":");
-		for (int j = 0; j <= 1; j++) // Leaf
+		for (int j = 0; j <= 1; j++) // Leaf No.#
 		{
-			OpHeight << std::fixed << std::setprecision(2) << Opening[i].Height / 1000;
-			Ymas << std::fixed << std::setprecision(2) << UnitWeight[j];
-			Thickness << std::fixed << std::setprecision(2) << TLeaf[j]/1000;
+			std::string OpHeight = ConvertToString(Opening[i].Height, 2, 0.001);
+			std::string Ymas = ConvertToString(UnitWeight[j], 2);
+			std::string Thickness = ConvertToString(TLeaf[j], 2, 0.001);
 
-			SelfWt.append("\n" + Ymas.str() + "kN/m^3 * (" + Thickness.str() + "m * (" + Height.str() + "m - " + OpHeight.str() + "m) = ");
-			SelfWt.append(SWOverOpening[i][j].str() + "kN/m");
-
-			OpHeight.clear();
-			OpHeight.str("");
-			Ymas.clear();
-			Ymas.str("");
-			Thickness.clear();
-			Thickness.str("");
+			SelfWt.append("\n" + Ymas + "kN/m^3 * (" + Thickness + "m * (" + Height + "m - " + OpHeight + "m) = ");
+			SelfWt.append(SWOverOpening[i][j] + "kN/m");
 		}
 	}
-
-	//std::string SWOO = "";
 	return SelfWt;
 }
 
 const std::string DVLR::PrintLoadSpreadLength()
 {
 	// Create String Stream
-	std::ostringstream SpreadLength;
-	std::ostringstream WallHeight;
-	WallHeight << std::fixed << std::setprecision(2) << HWall;
-	std::ostringstream Pt6H;
-	Pt6H << std::fixed << std::setprecision(2) << HWall*0.6;
+	std::string WallHeight = ConvertToString( HWall, 2 );
+	std::string Pt6H = ConvertToString( HWall, 2, 0.6 );
 
 	std::string LoadSpeadLength = "\n\nLoad Spread Length, Lspread = BLength + (OpeningHieght - 0.6H) < L";
-	LoadSpeadLength.append("\n0.6H = 0.6 * " + WallHeight.str() + "mm = " + Pt6H.str() + "mm");
+	LoadSpeadLength.append("\n0.6H = 0.6 * " + WallHeight + "mm = " + Pt6H + "mm");
 
 	for (int i = 0; i <= 1; i++)
 	{
-		SpreadLength << std::fixed << std::setprecision(2) << Opening[i].Spread;
+		std::string SpreadLength = ConvertToString(Opening[i].Spread, 2);
 
 		if (Opening[i].IsOpening)
 		{
 			LoadSpeadLength.append("\nLspread Opening " + std::to_string(i+1) + " = " + SpreadLengthMessage[i]);
-			LoadSpeadLength.append("\nTherefore, Lspread Opening " + std::to_string(i + 1) + " = " + SpreadLength.str() + "m");
+			LoadSpeadLength.append("\nTherefore, Lspread Opening " + std::to_string(i + 1) + " = " + SpreadLength + "m");
 		}
-		// Clear the string streams
-		SpreadLength.clear();
-		SpreadLength.str("");
 	}
 
 	return LoadSpeadLength;
@@ -485,23 +403,16 @@ const std::string DVLR::PrintLoadSpreadLength()
 // If no load spread (due to no openings), show ultimate load calculation
 const std::string DVLR::PrintNoLoadSpread()
 {
-	std::ostringstream SW;
-	std::ostringstream LoadLeaf[2];
-	LoadLeaf[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
-	LoadLeaf[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
-	std::ostringstream UltLoad[2];
-	UltLoad[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
-	UltLoad[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
+	std::string LoadLeaf[2] = { ConvertToString(LoadOverWall.Leaf1, 2), ConvertToString(LoadOverWall.Leaf2, 2) };
+	std::string UltLoad[2] = { ConvertToString(WultLoad.Leaf1, 2), ConvertToString(WultLoad.Leaf2, 2) };
 
 	std::string NoLoadSpread = "\n\nConsider the ultimate load on the wall:";
 	NoLoadSpread.append("\nWult = 1.4*SelfWeight + Wult,TopOfWall");
 
 	for (int i = 0; i <= 1; i++)
 	{
-		SW << std::fixed << std::setprecision(2) << SelfWeight[i];
-		NoLoadSpread.append("\nWult,Leaf" + std::to_string(i+1) + " = 1.4*" + SW.str() + "kN/m + "+ LoadLeaf[i].str() + "kN/m = " + UltLoad[i].str() + "kN/m");
-		SW.clear();
-		SW.str("");
+		std::string SW = ConvertToString(SelfWeight[i], 2);
+		NoLoadSpread.append("\nWult,Leaf" + std::to_string(i+1) + " = 1.4*" + SW + "kN/m + "+ LoadLeaf[i] + "kN/m = " + UltLoad[i] + "kN/m");
 	}
 	
 	return NoLoadSpread;
@@ -510,21 +421,18 @@ const std::string DVLR::PrintNoLoadSpread()
 // Calculate ult load of lapped loads
 const std::string DVLR::PrintDoubleLoadSpread()
 {
-	std::ostringstream SpreadLength[2];
-	SpreadLength[0] << std::fixed << std::setprecision(2) << Opening[0].Spread;
-	SpreadLength[1] << std::fixed << std::setprecision(2) << Opening[1].Spread;
-	std::ostringstream SpreadLengthSum;
-	SpreadLengthSum << std::fixed << std::setprecision(2) << Opening[0].Spread + Opening[1].Spread;
-	std::ostringstream Length;
-	Length << std::fixed << std::setprecision(2) << L;
+	std::string SpreadLength[2] = { ConvertToString(Opening[0].Spread,2), ConvertToString(Opening[1].Spread,2) };
+	float AddSpreadLength = Opening[0].Spread + Opening[1].Spread;
+	std::string SpreadLengthSum = ConvertToString(AddSpreadLength, 2);
+	std::string Length = ConvertToString(L, 2);
 
 	std::string DoubleLoadSpread = "\n\nCheck whether the two load spreads lap:";
 	DoubleLoadSpread.append("\nLoads lap if: Lspread1 + Lspread2 > L");
-	DoubleLoadSpread.append("\n" + SpreadLength[0].str() + "mm + " + SpreadLength[1].str() + "mm = " + SpreadLengthSum.str() + "mm ");
+	DoubleLoadSpread.append("\n" + SpreadLength[0] + "mm + " + SpreadLength[1] + "mm = " + SpreadLengthSum + "mm ");
 	if (SpreadCaseStatus == SpreadCase::DblLoadSpreadDoesNOTLap)
 	{
 		DoubleLoadSpread.append("< ");
-		DoubleLoadSpread.append(Length.str() + "mm");
+		DoubleLoadSpread.append(Length + "mm");
 		DoubleLoadSpread.append("\nBoth loads do NOT lap and we will therefore need to design for the greatest concentration.");
 		DoubleLoadSpread.append("\nProceeding to the load spread analysis from the greater load at opening " + BiggestOpening);
 		std::string SingleSpreadLoad = PrintSingleSpread();
@@ -533,37 +441,28 @@ const std::string DVLR::PrintDoubleLoadSpread()
 	else
 	{
 		// Call the string stream only if branching to double load spread calc
-		std::ostringstream SW;
-		std::ostringstream UltTopWall[2];
-		UltTopWall[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
-		UltTopWall[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
-		std::ostringstream OpeningWidth[2];
-		OpeningWidth[0] << std::fixed << std::setprecision(2) << Opening[0].Width;
-		OpeningWidth[1] << std::fixed << std::setprecision(2) << Opening[1].Width;
-		std::ostringstream Wult[2];
-		Wult[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
-		Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
-		std::ostringstream SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
-		SWOverOpening[0][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf1;
-		SWOverOpening[0][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf2;
-		SWOverOpening[1][0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf1;
-		SWOverOpening[1][1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf2;
+		std::string UltTopWall[2] = { ConvertToString(LoadOverWall.Leaf1, 2), ConvertToString(LoadOverWall.Leaf2, 2) };
+		std::string OpeningWidth[2] = { ConvertToString(Opening[0].Width, 2), ConvertToString(Opening[1].Width, 2) };
+		std::string Wult[2] = { ConvertToString(WultLoad.Leaf1, 2), ConvertToString(WultLoad.Leaf2, 2) };
+		std::string SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
+		SWOverOpening[0][0] = ConvertToString(SelfWeightOverOpening[0].Leaf1, 2);
+		SWOverOpening[0][1] = ConvertToString(SelfWeightOverOpening[0].Leaf2, 2);
+		SWOverOpening[1][0] = ConvertToString(SelfWeightOverOpening[1].Leaf1, 2);
+		SWOverOpening[1][1] = ConvertToString(SelfWeightOverOpening[1].Leaf2, 2);
 
 		DoubleLoadSpread.append("> ");
-		DoubleLoadSpread.append(Length.str() + "mm");
+		DoubleLoadSpread.append(Length + "mm");
 		DoubleLoadSpread.append("\nAnd hence both load spreads lap. \nWult = ");
 		DoubleLoadSpread.append("(Wult,TopOfWall + (1.4 * Selfweight@0.4H)) + (Wult,TopOfWall + (1.4*SelfWeightOverOpening)) * (OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000)) + ");
 		DoubleLoadSpread.append("(Wult,TopOfWall * (OpenWidth2 / 1000)) / (2 * (Lspread2 / 1000))");
 		for (int i = 0; i <= 1; i++) // Loops per Leaf
 		{
-			SW << std::fixed << std::setprecision(2) << SelfWeight[i];
+			std::string SW = ConvertToString(SelfWeight[i], 2);
 			DoubleLoadSpread.append("\nWult,Leaf" + std::to_string(i + 1) + " = (");
-			DoubleLoadSpread.append(UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + ((" + UltTopWall[i].str() + "kN/m + (1.4 * " + SWOverOpening[0][i].str() + "kN/m)) * (" + OpeningWidth[0].str() + "mm / 1000)) ");
-			DoubleLoadSpread.append("/ (2 * (" + SpreadLength[0].str() + "mm / 1000)) + (" + UltTopWall[i].str() + "kN/m + (1.4 * " + SWOverOpening[1][i].str() + "kN/m)) * (" + OpeningWidth[1].str() + "mm / 1000)) / (2 * (");
-			DoubleLoadSpread.append(SpreadLength[1].str() + "mm / 1000))");
-			DoubleLoadSpread.append("\n= " + Wult[i].str() + "kN/m");
-			SW.clear();
-			SW.str("");
+			DoubleLoadSpread.append(UltTopWall[i] + "kN/m + (1.4*" + SW + "kN/m)) + ((" + UltTopWall[i] + "kN/m + (1.4 * " + SWOverOpening[0][i]) + "kN/m)) * (" + OpeningWidth[0] + "mm / 1000)) ";
+			DoubleLoadSpread.append("/ (2 * (" + SpreadLength[0] + "mm / 1000)) + (" + UltTopWall[i] + "kN/m + (1.4 * " + SWOverOpening[1][i] + "kN/m)) * (" + OpeningWidth[1] + "mm / 1000)) / (2 * (");
+			DoubleLoadSpread.append(SpreadLength[1] + "mm / 1000))");
+			DoubleLoadSpread.append("\n= " + Wult[i] + "kN/m");
 		}
 	}
 	return DoubleLoadSpread;
@@ -572,52 +471,29 @@ const std::string DVLR::PrintDoubleLoadSpread()
 // Calculate ult load of (greatest) spread load
 const std::string DVLR::PrintSingleSpread()
 {
-	std::ostringstream SW;
-	std::ostringstream Length;
-	Length << std::fixed << std::setprecision(2) << L;
-
+	std::string Length = ConvertToString( L, 2);
 	// Values based on greatest opening size
-	std::ostringstream UltTopWall[2];
-	UltTopWall[0] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf1;
-	UltTopWall[1] << std::fixed << std::setprecision(2) << LoadOverWall.Leaf2;
-	std::ostringstream Wult[2];
-	Wult[0] << std::fixed << std::setprecision(2) << WultLoad.Leaf1;
-	Wult[1] << std::fixed << std::setprecision(2) << WultLoad.Leaf2;
-	std::ostringstream OpeningWidth;
-	std::ostringstream SpreadLength;
-	std::ostringstream SWOO[2];
+	std::string UltTopWall[2] = { ConvertToString( LoadOverWall.Leaf1, 2), ConvertToString(LoadOverWall.Leaf2, 2) };
+	std::string Wult[2] = { ConvertToString(WultLoad.Leaf1, 2), ConvertToString(WultLoad.Leaf2, 2) };
 
-	// Assign string stream operators based on greatest load
-	if (Opening[0].Width >= Opening[1].Width)
-	{
-		BiggestOpening = "1";
-		SpreadLength << std::fixed << std::setprecision(2) << Opening[0].Spread;
-		OpeningWidth << std::fixed << std::setprecision(2) << Opening[0].Width;
-		SWOO[0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf1;
-		SWOO[1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[0].Leaf2;
-	}
-	else
-	{
-		BiggestOpening = "2";
-		SpreadLength << std::fixed << std::setprecision(2) << Opening[1].Spread;
-		OpeningWidth << std::fixed << std::setprecision(2) << Opening[1].Width;
-		SWOO[0] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf1;
-		SWOO[1] << std::fixed << std::setprecision(2) << SelfWeightOverOpening[1].Leaf2;
-	}
+	int x;
+	// Assign string operators based on greatest load
+	(Opening[0].Width >= Opening[1].Width) ? x = 0 : x = 1;
+		BiggestOpening = std::to_string(x+1);
+		std::string SpreadLength = ConvertToString(Opening[x].Spread, 2);
+		std::string OpeningWidth = ConvertToString(Opening[x].Spread, 2);
+		std::string SWOO[2] = { ConvertToString(SelfWeightOverOpening[x].Leaf1, 2), ConvertToString(SelfWeightOverOpening[x].Leaf2, 2) };
 
-	//return ((UltLoad + (1.4 * Selfweight)) + (((UltLoad + (1.4*SelfWeightOverOpening[0])) * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000))));
-
+	// Begin to write content
 	std::string SingleLoadSpread = "\n\nConsider the load spread from opening " + BiggestOpening + ":";
 	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4 * Selfweight@0.4H)) + ((Wult,TopOfWall + (1.4*SelfWeightOverOpening)) * (OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
 	
 	for (int i = 0; i <= 1; i++) // Loops per Leaf
 	{
-		SW << std::fixed << std::setprecision(2) << SelfWeight[i];
-		SingleLoadSpread.append("\n" + UltTopWall[i].str() + "kN/m + (1.4*" + SW.str() + "kN/m)) + ((" + UltTopWall[i].str() + "kN/m + (1.4 * " + SWOO[i].str() + "kN/m)) * (" + OpeningWidth.str() + "mm / 1000)) ");
-		SingleLoadSpread.append("/ (2 * (" + SpreadLength.str() + "mm / 1000)) = ");
-		SingleLoadSpread.append(Wult[i].str() + "kN/m");
-		SW.clear();
-		SW.str("");
+		std::string SW = ConvertToString(SelfWeight[i], 2);
+		SingleLoadSpread.append("\n" + UltTopWall[i] + "kN/m + (1.4*" + SW + "kN/m)) + ((" + UltTopWall[i] + "kN/m + (1.4 * " + SWOO[i] + "kN/m)) * (" + OpeningWidth + "mm / 1000)) ");
+		SingleLoadSpread.append("/ (2 * (" + SpreadLength + "mm / 1000)) = ");
+		SingleLoadSpread.append(Wult[i] + "kN/m");
 	}
 	return SingleLoadSpread;
 }
@@ -627,10 +503,26 @@ const std::string DVLR::PrintMinFkSup()
 {
 	// Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF
 	// Suggested to make a matrix array to deal with different leaves at different opening and fit in loops
+	std::string SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
+	SWOverOpening[0][0] = ConvertToString(SelfWeightOverOpening[0].Leaf1, 2);
+	SWOverOpening[0][1] = ConvertToString(SelfWeightOverOpening[0].Leaf2, 2);
+	SWOverOpening[1][0] = ConvertToString(SelfWeightOverOpening[1].Leaf1, 2);
+	SWOverOpening[1][1] = ConvertToString(SelfWeightOverOpening[1].Leaf2, 2);
 
-	std::string MinFkSup = "";
+	std::string MinFkSup = "Determine load at support.\n";
+	MinFkSup.append("Wsup = (Wult+SWOverOpening)*((OpLength*0.5)+BLength)\n");
 
-	// Print Load at Support Calc
+	// Print Load at Support Calculation 
+	for (int i = 0 ; i <= 1 ; i++) // Per Opening
+	{
+		MinFkSup.append("Opening " + std::to_string(i+1) + ":\n");
+		for (int j = 0; j <= 1; j++) // Per Leaf
+		{
+			std::string OpBLength = ConvertToString(Opening[i].BLength, 2);
+			std::string LeafThickness = ConvertToString(TLeaf[i], 2);
+			MinFkSup.append("  Leaf " + std::to_string(j+1) + " = (" + /*Wult*/ + "+SWOverOpening)*((OpLength*0.5)+BLength)\n");
+		}
+	}
 	// Print MinFkSup
 
 	return MinFkSup;
