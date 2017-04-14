@@ -509,7 +509,7 @@ const std::string DVLR::PrintMinFkSup()
 	SWOverOpening[1][0] = ConvertToString(SelfWeightOverOpening[1].Leaf1, 2);
 	SWOverOpening[1][1] = ConvertToString(SelfWeightOverOpening[1].Leaf2, 2);
 
-	std::string MinFkSup = "Determine load at support.\n";
+	std::string MinFkSup = "\nDetermine load at support.\n";
 	MinFkSup.append("Wsup = (Wult+SWOverOpening)*((OpLength*0.5)+BLength)\n");
 
 	// Print Load at Support Calculation 

@@ -36,11 +36,11 @@ struct TwoLeafStruct
 // Opening object created in the DVLR class
 struct StructuralOpenings
 {
-	bool IsOpening = false; // Assumes there is no opening unless the user specifically inputs otherwise
-	double Width = 0;
-	double BLength = 0;
-	double Height = 0;
-	double Spread = 0;
+	bool IsOpening;
+	double Width;
+	double BLength;
+	double Height;
+	double Spread;
 };
 
 enum class SpreadCase
@@ -85,7 +85,7 @@ public: // Methods
 	static void IsSlendernessOK(double&);
 
 	const double GetSafetyFactor();
-		int GetConstrControl();
+		int GetPSFControl();
 		int GetManufControl();
 
 	// TODO - Include for out of plane wall load I.E. beam perpendicular to wall
@@ -95,27 +95,29 @@ public: // Methods
 		void GetOpenings();
 			const double SpreadLength(double, double, double, double, int);
 		TwoLeafStruct GetSpreadLoad();
-		const void GetSelfWeight();
-		const TwoLeafStruct GetSelfWeightOverOpening(double*, double*, double, double, int);
+	double GetOpeningWidth(int i);
+	double GetWallLength();
+	const void GetSelfWeight();
+	static const TwoLeafStruct GetSelfWeightOverOpening(double*, double*, double, double, int);
 		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
-		const double GetDoubleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
+		const double GetDoubleLapLoad(double, double, double, double, double Spread1, double Spread2, double SelfWeightOverOpening1, double SelfWeightOverOpening2);
 		TwoLeafStruct GetUltLineLoad(double*);
 
 	const TwoLeafStruct GetBeta();
-		const bool IsEccentricityDefault();
+	bool IsEccentricityDefault() const;
 		const double GetUserEccentricity(double, int);
 		const double CustomBearing(double, int);
 		const double GetCustomEccentricity(double, int);
-		const double GetEx(double, double, double, double, double, double);
+	static const double GetEx(double, double, double, double, double, double);
 
 	const TwoLeafStruct GetSmallAreaFactor();
 		const double GetSAF(double&, double&);
 
-	const double GetMinFk(double&, double&, double&, double&, double&);
+	static const double GetMinFk(double&, double&, double&, double&, double&);
 
 	const TwoLeafStruct CheckLintelBearing(double & BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SelfWeightOverOpening, double& OpLength, double& SafetyFactor);
-		const double GetMinBearCoeff(double& BLength, double LeafThickness);
-		const double GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength);
+	static const double GetMinBearCoeff(double& BLength, double LeafThickness);
+	static const double GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength);
 
 // ### - Methods to print *.txt output - ###################################################################################################################################################
 

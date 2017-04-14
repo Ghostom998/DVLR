@@ -5,9 +5,45 @@
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string> // Allows strings to be used
-#include <sstream> // Allows numbers to be cast to strings
 #include <iomanip> // std::setprecision -> allows us to reduce the decimal places in the string stream
 
+double GetValidNumber()
+{
+	bool IsValid;
+	double Num;
+	do
+	{
+		std::cin >> Num;
+		//Checks if user input a number
+		if (!std::cin) // or if(cin.fail())
+		{
+			// user didn't input a number
+			std::cin.clear(); // reset failbit
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
+																				// next, request user reinput
+			IsValid = false;
+			std::cout << "Invalid input, please try again:  ";
+		}
+		else
+		{
+			IsValid = true;
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input Buffer
+		}
+	} while (!IsValid);
+	return Num;
+}
+
+bool IsValidCase(double UserSelection) // Selection for custom eccentricity cases
+{
+	if(UserSelection >= 1 || UserSelection <= 5)
+	{
+		return true;
+	}
+	std::cout << "Please enter a valid case:  ";
+	return false;
+}
+
+// TODO - Pass whether 1 or 2 leaves? or create 2 wall objects
 DVLR::DVLR() { /* Default Constructor*/ }
 
 const double DVLR::GetSlenderness()
@@ -22,6 +58,9 @@ const double DVLR::GetSlenderness()
 	std::cout << "Therefore, effective height, Heff = " << RestraintFactor;
 	std::cout << " * " << HWall << " = " << Heff << "mm" << std::endl;
 
+	// Get the opening dimensions
+	GetOpenings();
+
 	return Heff / Teff;
 }
 
@@ -30,30 +69,8 @@ const double DVLR::GetTeff()
 	// Ask the user for the thickness of each leaf
 	for (int i = 0; i <= 1; i++) // Hard number of 2 used as this will always check a cavity wall!
 	{
-		bool IsValid;
-		do
-		{
 			std::cout << "Enter the thickness of leaf " << i + 1 << ", t" << i + 1 << " [mm]:  ";
-			std::cin >> TLeaf[i];
-
-			//Checks if user input a number
-			if (!std::cin)// or if(cin.fail())
-			{
-				// user didn't input a number
-				std::cin.clear(); // reset fail bit
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-				// next, request user reinput
-				IsValid = false;
-				std::cout << "Invalid input, please try again." << std::endl;
-			}
-			else
-			{
-				IsValid = true;
-			}
-		}
-		while (!IsValid);
-
-		std::cin.ignore(256, '\n'); // Clear the input buffer of the first 256 characters and newline characters
+			TLeaf[i] = GetValidNumber();
 	}
 
 	// Calculates the effective thicknesses
@@ -75,28 +92,8 @@ const double DVLR::GetTeff()
 
 const double DVLR::GetHeff()
 {
-	bool IsValid;
-	do
-	{
-		std::cout << "Please input the height of the Wall [mm]:  ";
-		std::cin >> HWall;
-		std::cin.ignore(1000, '\n');
-
-		if (!std::cin) // or if(cin.fail())
-		{
-			// user didn't input a number
-			std::cin.clear(); // reset failbit
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-			// next, request user reinput
-			IsValid = false;
-			std::cout << "Invalid input, please try again." << std::endl;
-		}
-		else
-		{
-			IsValid = true;
-		}
-	}
-	while (!IsValid);
+	std::cout << "Please input the height of the Wall [mm]:  ";
+	HWall = GetValidNumber();
 
 	RestraintFactor = GetRestraint();
 
@@ -162,73 +159,37 @@ const double DVLR::GetSafetyFactor()
 	// Defines the table that the Partial Safety Factor is taken from
 	double PSFTable[2][2] = {{2.5, 2.8},{3.1, 3.5}};
 
-	int ConstrControl = GetConstrControl();
-	int ManufControl = GetManufControl();
-
+	std::cout << "Please input normal or special CONSTRUCTION control (N/S):  ";
+	int ConstrControl = GetPSFControl();
+	(ConstrControl = 1) ? ConstructionControl = "normal" : ConstructionControl = "special";
+	std::cout << "Please input normal or special MANUFACTURE control (N/S):  ";
+	int ManufControl = GetPSFControl();
+	(ManufControl = 1) ? ManufactureControl = "normal" : ManufactureControl = "special";
 
 	return PSFTable[ConstrControl][ManufControl];
 }
 
-// Future suggestion: as GetConstrControl & GetManufControl take in the same values and return the same values, call these as one function with different arguments. As obviosuly fewer lines of code is better.
-int DVLR::GetConstrControl()
+int DVLR::GetPSFControl()
 {
-	std::string ConstrControl = "";
-	bool IsCValid; // Validity of CONSTRUCTION control
+	std::string FormOfControl = "";
+	bool IsValid; // Validity of input
 
 	do
 	{
-		std::cout << "Please input normal or special CONSTRUCTION control (N/S):  ";
-		getline(std::cin, ConstrControl);
+		getline(std::cin, FormOfControl);
 
-		if (ConstrControl == "Normal" || ConstrControl == "normal" || ConstrControl == "N" || ConstrControl == "n")
+		if (FormOfControl == "Normal" || FormOfControl == "normal" || FormOfControl == "N" || FormOfControl == "n")
 		{
-			ConstructionControl = "normal";
 			return 1;
 		}
-		else if (ConstrControl == "Special" || ConstrControl == "special" || ConstrControl == "S" || ConstrControl == "s")
+		if (FormOfControl == "Special" || FormOfControl == "special" || FormOfControl == "S" || FormOfControl == "s")
 		{
-			ConstructionControl = "special";
 			return 0;
 		}
-		else
-		{
-			std::cout << "Please enter a valid input." << std::endl;
-			IsCValid = false;
-			continue;
-		}
+		std::cout << "Please enter a valid input:  ";
+		IsValid = false;
 	}
-	while (!IsCValid);
-	std::exit(-1);
-}
-
-int DVLR::GetManufControl()
-{
-	std::string ManufControl = "";
-	bool IsMValid; // Validity of MANUFACTURE control
-
-	do
-	{
-		std::cout << "Please input normal or special MANUFACTURE control (N/S):  ";
-		getline(std::cin, ManufControl);
-
-		if (ManufControl == "Normal" || ManufControl == "normal" || ManufControl == "N" || ManufControl == "n")
-		{
-			ManufactureControl = "normal";
-			return 1;
-		}
-		else if (ManufControl == "Special" || ManufControl == "special" || ManufControl == "S" || ManufControl == "s")
-		{
-			ManufactureControl = "special";
-			return 0;
-		}
-		else
-		{
-			std::cout << "Please enter a valid input." << std::endl;
-			IsMValid = false;
-			continue;
-		}
-	}
-	while (!IsMValid);
+	while (!IsValid);
 	std::exit(-1);
 }
 
@@ -292,36 +253,24 @@ const void DVLR::GetSelfWeight()
 	std::cout << "\nPlease enter the self-weight of masonry," << std::endl;
 	for (int i = 0; i <= 1; i++)
 	{
-		bool IsValid;
-		do
-		{
 			std::cout << "  Leaf " << i + 1 << " [kN/m^3]: ";
-			std::cin >> UnitWeight[i];
-			//Checks if user input a number
-			if (!std::cin) // or if(cin.fail())
-			{
-				// user didn't input a number
-				std::cin.clear(); // reset failbit
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-				// next, request user re input
-				IsValid = false;
-				std::cout << "Invalid input, please try again." << std::endl;
-			}
-			else
-			{
-				IsValid = true;
-			}
-		}
-		while (!IsValid);
+			UnitWeight[i] = GetValidNumber();
 	}
 	PtFourH = 0.4 * HWall / 1000;
-
 	std::cout << "Therefore, the self-weight at 0.4H => " << PtFourH << "m," << std::endl;
 
 	for (int i = 0; i <= 1; i++)
 	{
 		SelfWeight[i] = UnitWeight[i] * (PtFourH) * (TLeaf[i] / 1000);
 		std::cout << "Leaf " << i + 1 << ": " << SelfWeight[i] << "kN/m" << std::endl;
+		// Display Self weight of masonry above opening
+		for(int j = 0 ; j <= 1 ; j++)
+		{
+			if (Opening[j].IsOpening)
+			{
+				SelfWeightOverOpening[i] = GetSelfWeightOverOpening(UnitWeight, TLeaf, HWall, Opening[i].Height, i);
+			}
+		}
 	}
 	return;
 }
@@ -357,10 +306,6 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 	double SwooLF1[2] = { SelfWeightOverOpening[0].Leaf1 ,SelfWeightOverOpening[1].Leaf1 };
 	double SwooLF2[2] = { SelfWeightOverOpening[0].Leaf2 ,SelfWeightOverOpening[1].Leaf2 };
 
-	std::cout << "\nConsider load concentrations due to openings:";
-
-	// Get the opening widths, bearing lengths and load spreads.
-	GetOpenings();
 	// If both opening widths are not zero
 	if (Opening[0].IsOpening && Opening[1].IsOpening)
 	{
@@ -371,8 +316,8 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 			WLoad.Message.append("\nConsidering the load concentration from both load spreads lapping.");
 			std::cout << WLoad.Message << std::endl;
 			// Opening array passed as both are required per leaf calculation!
-			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], SelfWeightOverOpening[0].Leaf1, SelfWeightOverOpening[1].Leaf1);
-			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], SelfWeightOverOpening[0].Leaf2, SelfWeightOverOpening[1].Leaf2);
+			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], Opening[0].Width, Opening[1].Width, Opening[0].Spread, Opening[1].Spread, SelfWeightOverOpening[0].Leaf1, SelfWeightOverOpening[1].Leaf1);
+			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], Opening[0].Width, Opening[1].Width, Opening[0].Spread, Opening[1].Spread, SelfWeightOverOpening[0].Leaf2, SelfWeightOverOpening[1].Leaf2);
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadLaps;
 		}
@@ -412,110 +357,31 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 	return WLoad;
 }
 
-// Too Large => TODO - Re factor into separate sub-methods
 void DVLR::GetOpenings()
 {
-	bool IsValid;
-	do
-	{
-		std::cout << "\nPlease enter the length of wall considered, L [mm]:  ";
-		std::cin >> L;
-		//Checks if user input a number
-		if (!std::cin) // or if(cin.fail())
-		{
-			// user didn't input a number
-			std::cin.clear(); // reset failbit
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-			// next, request user reinput
-			IsValid = false;
-			std::cout << "Invalid input, please try again.";
-		}
-		else
-		{
-			IsValid = true;
-		}
-	}
-	while (!IsValid);
+	std::cout << "\nPlease enter the length of wall considered, L [mm]:  ";
+	L = GetValidNumber();
 
 	for (int i = 0; i <= 1; i++)
 	{
-		bool IsOpValid;
-		do
-		{
-			std::cout << "Please enter the width of opening " << i + 1 << " [mm]:  ";
-			std::cin >> Opening[i].Width;
-			//Checks if user input a number
-			if (!std::cin) // or if(cin.fail())
-			{
-				// user didn't input a number
-				std::cin.clear(); // reset failbit
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-				// next, request user reinput
-				IsOpValid = false;
-				std::cout << "Invalid input, please try again." << std::endl;
-			}
-			else
-			{
-				IsOpValid = true;
-			}
-		}
-		while (!IsOpValid);
-
-		// If there is an opening...
+		std::cout << "Please enter the width of opening " << i + 1 << " [mm]:  ";
+		Opening[i].Width = GetValidNumber();
+			
+		// If the opening width is not zero
 		if (Opening[i].Width != 0)
 		{
+			// ..There must be an opening present
 			Opening[i].IsOpening = true;
-			bool IsBValid;
-			bool IsOpHValid = true;
 			// ..Get the bearing length...
-			do
-			{
-				std::cout << "Please enter the bearing/pad stone length of the member forming opening " << i + 1 << " [mm]:  ";
-				std::cin >> Opening[i].BLength;
-				//Checks if user input a number
-				if (!std::cin) // or if(cin.fail())
-				{
-					// user didn't input a number
-					std::cin.clear(); // reset fail bit
-					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-					// next, request user reinput
-					IsBValid = false;
-					std::cout << "Invalid input, please try again." << std::endl;
-				}
-				else
-				{
-					IsBValid = true;
-				}
-			}
-			while (!IsBValid);
+			std::cout << "Please enter the bearing/pad stone length of the member forming opening " << i + 1 << " [mm]:  ";
+			Opening[i].BLength = GetValidNumber();
 			// .. and get the height to the top of the opening
-			do
-			{
-				std::cout << "Please enter the height to the top of the opening " << i + 1 << " [mm]:  ";
-				std::cin >> Opening[i].Height;
+			std::cout << "Please enter the height to the top of the opening " << i + 1 << " [mm]:  ";
+			Opening[i].Height = GetValidNumber();
 
-				//Checks if user input a number
-				if (!std::cin) // or if(cin.fail())
-				{
-					// user didn't input a number
-					std::cin.clear(); // reset fail bit
-					std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-					// next, request user reinput
-					IsOpHValid = false;
-					std::cout << "Invalid input, please try again." << std::endl;
-				}
-				else
-				{
-					IsBValid = true;
-				}
-			}
-			while (!IsOpHValid);
-
-			double Pt6H = HWall - (PtFourH * 1000); // millimeters
-
+			double Pt6H = 0.6*HWall; // millimeters
+			/// Load Spread Length
 			Opening[i].Spread = SpreadLength(Opening[i].BLength, Pt6H, L, Opening[i].Height, i);
-
-			SelfWeightOverOpening[i] = GetSelfWeightOverOpening(UnitWeight, TLeaf, HWall, Opening[i].Height, i);
 		}
 	}
 	return;
@@ -554,17 +420,25 @@ const double DVLR::SpreadLength(double BearingLength, double Pt6H, double Length
 
 const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening1, double SelfWeightOverOpening2)
 {
+	auto Part1 = UltLoad + (1.4 * Selfweight);
+	auto Part2 = (UltLoad + 1.4*SelfWeightOverOpening1) * (OpenWidth[0].Width / 1000) / (2 * (Opening[0].Spread / 1000));
+	auto Part3 = (UltLoad + 1.4*SelfWeightOverOpening2) * (OpenWidth[1].Width / 1000) / (2 * (Opening[1].Spread / 1000));
+
 	if (OpenWidth[0].Width >= OpenWidth[1].Width)
 	{
-		return ((UltLoad + (1.4 * Selfweight)) + (((UltLoad + (1.4*SelfWeightOverOpening1)) * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000))));
+		return Part1 + Part2;
 	}
-	return ((UltLoad + (1.4 * Selfweight)) + ((UltLoad + (1.4*SelfWeightOverOpening2)) * (OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000)));
+	return Part1 + Part3;
 }
 
-const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening1, double SelfWeightOverOpening2)
+const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double OpenWidth1, double OpenWidth2, double Spread1, double Spread2, double SelfWeightOverOpening1, double SelfWeightOverOpening2)
 {
-	return (UltLoad + (1.4 * Selfweight)) + ((UltLoad + (1.4*SelfWeightOverOpening2)) * (OpenWidth[1].Width / 1000)) / (2 * (Opening[1].Spread / 1000))
-		+ ((UltLoad + (1.4*SelfWeightOverOpening1)) * (OpenWidth[0].Width / 1000)) / (2 * (Opening[0].Spread / 1000));
+	auto Part1 = UltLoad + 1.4 * Selfweight;
+	auto Part2 = (UltLoad + 1.4*SelfWeightOverOpening2) * (OpenWidth2 / 1000) / (2 * (Spread2 / 1000));
+	auto Part3 = (UltLoad + 1.4*SelfWeightOverOpening1) * (OpenWidth1 / 1000) / (2 * (Spread1 / 1000));
+	std::cout << "Opening Width1: " << OpenWidth1 << " ; Opening Width2: " << OpenWidth2 << std::endl;
+	std::cout << "Opening Spread1: " << Spread1 << " ; Opening Spread2: " << Spread2 << std::endl;
+	return Part1 + Part2 + Part3;
 }
 
 const TwoLeafStruct DVLR::GetBeta()
@@ -572,7 +446,7 @@ const TwoLeafStruct DVLR::GetBeta()
 	std::cout << "\nConsider a load capacity reduction due to eccentricity & slenderness:" << std::endl;
 	TwoLeafStruct B;
 
-	bool UseDefaultEccentricity = IsEccentricityDefault();
+	auto UseDefaultEccentricity = IsEccentricityDefault();
 
 	if (!UseDefaultEccentricity)
 	{
@@ -637,10 +511,8 @@ const TwoLeafStruct DVLR::GetBeta()
 	return B;
 }
 
-const bool DVLR::IsEccentricityDefault()
+bool DVLR::IsEccentricityDefault() const
 {
-	std::cin.clear(); // reset failbit
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::string IsEccentricityDefault = "";
 	bool IsValid; // Validity of input
 
@@ -671,9 +543,8 @@ const bool DVLR::IsEccentricityDefault()
 
 const double DVLR::GetUserEccentricity(double Thickness, int Leaf)
 {
-	// check if input is a number
-	bool IsValid;
-	auto UserSelection = 0;
+	double Custom;
+	double NotFullBearing;
 
 	do
 	{
@@ -686,27 +557,8 @@ const double DVLR::GetUserEccentricity(double Thickness, int Leaf)
 		std::cout << "5. A custom value. Note that entering a zero value will result in a minimum eccentricity of 0.05t being used." << std::endl;
 		std::cout << "Case:  ";
 
-		do
-		{
-			std::cin >> UserSelection;
-			// 'Safety net' in case the user does not enter a number it does not crash the program!
-			if (!std::cin)// or if(cin.fail())
-			{
-				// user didn't input a number
-				std::cin.clear(); // reset failbit
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //skip Invalid input
-				// next, request user reinput
-				Selection = UserEccentricity::Invalid_Status;
-				IsValid = false;
-				std::cout << "Invalid input, please try again:  ";
-			}
-			else
-			{
-				IsValid = true;
-			}
-		}
-		while (!IsValid);
-
+		int UserSelection = GetValidNumber();
+			
 		// Assuming input is a number, pass it into the switch. Breaks ignored due to returns. i.e. unreachable code.
 		// Enums generated for text generation purposes
 		switch (UserSelection)
@@ -722,19 +574,19 @@ const double DVLR::GetUserEccentricity(double Thickness, int Leaf)
 			return (Thickness / 2);
 		case 4:
 			Selection = UserEccentricity::NotFullBearing;
-			double NotFullBearing = CustomBearing(Thickness, Leaf);
+			NotFullBearing = CustomBearing(Thickness, Leaf);
 			return NotFullBearing;
 		case 5:
 			Selection = UserEccentricity::Custom;
-			double Custom = GetCustomEccentricity(Thickness, Leaf);
+			Custom = GetCustomEccentricity(Thickness, Leaf);
 			return Custom;
 		default:
 			// If input is not a valid case, ask the user for a valid case.
-			std::cout << "Please enter a valid input." << std::endl;
+			std::cout << "Please enter a valid input.\n" << std::endl;
 			Selection = UserEccentricity::Invalid_Status;
 		}
 	}
-	while (Selection != UserEccentricity::Invalid_Status);
+	while (Selection == UserEccentricity::Invalid_Status);
 	return 0.0;
 }
 
@@ -851,12 +703,13 @@ const TwoLeafStruct DVLR::CheckLintelBearing(double& BLength, double LeafThickne
 	// Get the bearing coefficient based on the bearing length and leaf thickness
 	MinBearCoeff.Leaf1 = GetMinBearCoeff(BLength, LeafThickness[0]);
 	MinBearCoeff.Leaf2 = GetMinBearCoeff(BLength, LeafThickness[1]);
+
 	// Get the Reaction at the support
 	LoadAtSupport.Leaf1 = GetLoadAtSupport(LineLoadOverWall.Leaf1, SWOO.Leaf1, OpLength, BLength);
 	LoadAtSupport.Leaf2 = GetLoadAtSupport(LineLoadOverWall.Leaf2, SWOO.Leaf2, OpLength, BLength);
 
-	MinBearingStrength.Leaf1 = (LoadAtSupport.Leaf1 * SafetyFactor) / (MinBearCoeff.Leaf1 * LeafThickness[0] * BLength);
-	MinBearingStrength.Leaf2 = (LoadAtSupport.Leaf2 * SafetyFactor) / (MinBearCoeff.Leaf2 * LeafThickness[1] * BLength);
+	MinBearingStrength.Leaf1 = (LoadAtSupport.Leaf1 * SafetyFactor *  1000) / (MinBearCoeff.Leaf1 * LeafThickness[0] * BLength);
+	MinBearingStrength.Leaf2 = (LoadAtSupport.Leaf2 * SafetyFactor * 1000) / (MinBearCoeff.Leaf2 * LeafThickness[1] * BLength);
 
 	return MinBearingStrength;
 }
@@ -875,4 +728,5 @@ const double DVLR::GetMinBearCoeff(double& BLength, double LeafThickness)
 	return 1.00;
 }
 
-const double DVLR::GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength) {return (Wult+SWOverOpening)*(((OpLength/1000)*0.5)+(BLength/1000));}
+const double DVLR::GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength) 
+{return (Wult+SWOverOpening)*(((OpLength/1000)*0.5)+(BLength/1000));}

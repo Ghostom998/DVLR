@@ -12,13 +12,11 @@ DVLR Wall; // A wall object in the DVLR class
 
 int main()
 {
-	bool SaveFile = false;
-
 	Intro();
 	Wall.StartProgram();
 
 	// User option to save file
-	SaveFile = AskToSaveFile();
+	auto SaveFile = AskToSaveFile();
 	if (SaveFile)
 	{
 		// Writes to file
