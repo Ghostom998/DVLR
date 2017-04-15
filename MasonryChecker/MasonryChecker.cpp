@@ -698,15 +698,13 @@ const double DVLR::GetMinFk(double& Ym, double& Wult, double& B, double& SAF, do
 
 const TwoLeafStruct DVLR::CheckLintelBearing(double& BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SWOO, double& OpLength, double& SafetyFactor)
 {
-	TwoLeafStruct LoadAtSupport;
-	TwoLeafStruct MinBearingStrength;
 	// Get the bearing coefficient based on the bearing length and leaf thickness
 	MinBearCoeff.Leaf1 = GetMinBearCoeff(BLength, LeafThickness[0]);
 	MinBearCoeff.Leaf2 = GetMinBearCoeff(BLength, LeafThickness[1]);
 
 	// Get the Reaction at the support
-	LoadAtSupport.Leaf1 = GetLoadAtSupport(LineLoadOverWall.Leaf1, SWOO.Leaf1, OpLength, BLength);
-	LoadAtSupport.Leaf2 = GetLoadAtSupport(LineLoadOverWall.Leaf2, SWOO.Leaf2, OpLength, BLength);
+	LoadAtSupport[i].Leaf1 = GetLoadAtSupport(LineLoadOverWall.Leaf1, SWOO.Leaf1, OpLength, BLength);
+	LoadAtSupport[i].Leaf2 = GetLoadAtSupport(LineLoadOverWall.Leaf2, SWOO.Leaf2, OpLength, BLength);
 
 	MinBearingStrength.Leaf1 = (LoadAtSupport.Leaf1 * SafetyFactor *  1000) / (MinBearCoeff.Leaf1 * LeafThickness[0] * BLength);
 	MinBearingStrength.Leaf2 = (LoadAtSupport.Leaf2 * SafetyFactor * 1000) / (MinBearCoeff.Leaf2 * LeafThickness[1] * BLength);

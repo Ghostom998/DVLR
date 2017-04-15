@@ -148,6 +148,7 @@ public: // Methods
 		const std::string PrintMinFkSup();
 		// Print the eccentricity, SAF and the capacity reduction factor
 		const std::string PrintEccentricity();
+			const std::string PrintUserEccentricity();
 
 		const std::string PrintSAF();
 
@@ -227,6 +228,8 @@ private: // Members
 	// Applied bearing stress beneath the lintel bearing
 	TwoLeafStruct MinBStrength[2]; // first member => both leaves of opening 1, second member => both leaves of opening 2
 	TwoLeafStruct MinBearCoeff;
+	TwoLeafStruct LoadAtSupport[2];
+	TwoLeafStruct MinBearingStrength;
 };
 
 #endif // DVLR_H

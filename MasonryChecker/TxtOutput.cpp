@@ -1,4 +1,4 @@
-#include "stdafx.h"		// Turn on in Visual Studio
+//#include "stdafx.h"		// Turn on in Visual Studio
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string>		// Allows strings to be used
@@ -68,7 +68,7 @@ const int DVLR::PrintToFile()
 	// If write  is not successful
 	if (!writer)
 	{
-		// ... Display an error message 
+		// ... Display an error message
 		std::cout << "Error writing to file." << std::endl;
 		std::cout << "Please check that you have permission to save to the location or \ndo not already have a file of the same name open." << std::endl;
 		// ...and close the program in error.
@@ -88,12 +88,12 @@ const int DVLR::PrintToFile()
 			system(Command.c_str());
 			std::exit(0);
 			#elif __unix__
-			// Build the command to pass to system - WIP 
+			// Build the command to pass to system - WIP
 			std::string Command = "gedit " + FileName + ".txt\n";
 			execl(Command.c_str());
 			std::exit(0);
 			#else
-			#error 
+			#error
 			std::cout << "OS not supported!\n" << std::endl;
 			std::exit(-1);
 			#endif
@@ -121,7 +121,8 @@ bool OpenFile()
 const std::string DVLR::PrintIntro(std::string NameOfFile)
 {
 	std::string Introduction = "MasonryChecker. \nby Thomas Roberts, CWA.";
-	Introduction.append("\n\nA program to consider the vertical load design of cavity masonry in accordance with BS 5628-1:2005.");
+	Introduction.append("\n\nAn Open Source structural design program to consider the vertical load design of cavity masonry in accordance with BS 5628-1:2005.");
+	Introduction.append("\nStay up to date with the project or contribute on GitHub https://github.com/Ghostom998/DVLR/");
 	Introduction.append("\nWall Referenced: " + NameOfFile);
 	return Introduction;
 }
@@ -166,7 +167,7 @@ const std::string DVLR::PrintLoadings()
 {
 	std::string Length = ConvertToString( L, 2 );
 	std::string PointFourH = ConvertToString( PtFourH, 2);
-	
+
 	// Print user input characteristic loads
 	std::string Loading = "\nConsider the characteristic loading at the top of the wall: ";
 	std::string LoadAtTopOfWall = PrintLoadingsTopWall();
@@ -225,10 +226,10 @@ const std::string DVLR::PrintLoadings()
 			// if none of the above conditions were met then there was clearly an error
 			std::cout << "Error printing load spread. Please try again." << std::endl;
 			std::cout << "If the error persists, please report the error with the steps to reproduce it." << std::endl;
-			std::cout << "Please \"create an issue\" in: https://github.com/Ghostom998/DVLR/issues" << std::endl;
+			std::cout << "Please \"create an issue\" in: https://github.com/Ghostom998/DVLR/issues/" << std::endl;
 			std::exit(-1);
 	}
-	Loading.append(LoadLap);	
+	Loading.append(LoadLap);
 
 	return Loading;
 }
@@ -236,8 +237,51 @@ const std::string DVLR::PrintLoadings()
 // TODO Print Eccentricity results
 const std::string DVLR::PrintEccentricity()
 {
-	std::string Eccentricity = "";
+	std::string Eccentricity = "Consider the Eccentricity from the load above:\n";
+	std::string UserEccentricity = PrintUserEccentricity();
+	Eccentricity.append(UserEccentricity);
 	return Eccentricity;
+}
+
+const std::string DVLR::PrintUserEccentricity()
+{
+	std::string UserEccentricity;
+	for(int i = 0 ; i<=1 ; i++)
+	{
+	std::string Ex = ConvertToString(Ex[i], 2);
+	std::string t = ConvertToString(TLeaf[i], 1);
+	std::string Bearing = ConvertToString(BearingLength[i], 1)
+
+	UserEccentricity.append("Leaf " + std::to_string(i+1) + ",ex = ");
+	switch (Selection)
+	{
+	case UserEccentricity::FullBearing:
+		UserEccentricity.append("t/6 = " + t + "mm/6 = ");
+		break;
+	case UserEccentricity::Continuous:
+		UserEccentricity.append("t/3 = " + t + "mm/3 = ");
+		break;
+	case UserEccentricity::Hangars:
+		UserEccentricity.append("t/2 = " + t + "mm/2 = ");
+		break;
+	case UserEccentricity::NotFullBearing:
+		UserEccentricity.append("t/2 - l/3 = " + t + "mm/2 - " + Bearing + "mm/3 = ");
+		break;
+	case UserEccentricity::Custom:
+		UserEccentricity.append("Custom Value = ");
+		break;
+	default:
+		// If input is not a valid case, ask the user for a valid case.
+		std::cout << "Error writing output. Please raise an issue on our GitHub page with the steps to reproduce the error" << std::endl;
+		std::cout << "UserEccentricity.append(" << std::endl;
+		UserEccentricity.append("##ERROR_WRITING_OUTPUT##");
+		UserEccentricity.append("Please raise an issue on the GitHub page with the steps to reproduce it.");
+		UserEccentricity.append("https://github.com/Ghostom998/DVLR/issues/");
+	}
+	UserEccentricity.append(Ex + "mm\n")
+}
+
+	return UserEccentricity;
 }
 
 // TODO Print SAF
@@ -414,7 +458,7 @@ const std::string DVLR::PrintNoLoadSpread()
 		std::string SW = ConvertToString(SelfWeight[i], 2);
 		NoLoadSpread.append("\nWult,Leaf" + std::to_string(i+1) + " = 1.4*" + SW + "kN/m + "+ LoadLeaf[i] + "kN/m = " + UltLoad[i] + "kN/m");
 	}
-	
+
 	return NoLoadSpread;
 }
 
@@ -487,7 +531,7 @@ const std::string DVLR::PrintSingleSpread()
 	// Begin to write content
 	std::string SingleLoadSpread = "\n\nConsider the load spread from opening " + BiggestOpening + ":";
 	SingleLoadSpread.append("\nWult = (Wult,TopOfWall + (1.4 * Selfweight@0.4H)) + ((Wult,TopOfWall + (1.4*SelfWeightOverOpening)) * (OpenWidth" + BiggestOpening + " / 1000)) / (2 * (Lspread" + BiggestOpening + " / 1000))");
-	
+
 	for (int i = 0; i <= 1; i++) // Loops per Leaf
 	{
 		std::string SW = ConvertToString(SelfWeight[i], 2);
@@ -498,7 +542,7 @@ const std::string DVLR::PrintSingleSpread()
 	return SingleLoadSpread;
 }
 
-// TODO - Finish 
+// TODO - Finish
 const std::string DVLR::PrintMinFkSup()
 {
 	// Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF
@@ -508,19 +552,27 @@ const std::string DVLR::PrintMinFkSup()
 	SWOverOpening[0][1] = ConvertToString(SelfWeightOverOpening[0].Leaf2, 2);
 	SWOverOpening[1][0] = ConvertToString(SelfWeightOverOpening[1].Leaf1, 2);
 	SWOverOpening[1][1] = ConvertToString(SelfWeightOverOpening[1].Leaf2, 2);
+	std::string LoadAtSupport[2][2];
+	LoadAtSupport[0][0] = ConvertToString(LoadAtSupport[0].Leaf1);
+	LoadAtSupport[0][1] = ConvertToString(LoadAtSupport[0].Leaf2);
+	LoadAtSupport[1][0] = ConvertToString(LoadAtSupport[1].Leaf1);
+	LoadAtSupport[1][1] = ConvertToString(LoadAtSupport[1].Leaf2);
 
 	std::string MinFkSup = "\nDetermine load at support.\n";
 	MinFkSup.append("Wsup = (Wult+SWOverOpening)*((OpLength*0.5)+BLength)\n");
 
-	// Print Load at Support Calculation 
+	// Print Load at Support Calculation
 	for (int i = 0 ; i <= 1 ; i++) // Per Opening
 	{
 		MinFkSup.append("Opening " + std::to_string(i+1) + ":\n");
 		for (int j = 0; j <= 1; j++) // Per Leaf
 		{
 			std::string OpBLength = ConvertToString(Opening[i].BLength, 2);
-			std::string LeafThickness = ConvertToString(TLeaf[i], 2);
-			MinFkSup.append("  Leaf " + std::to_string(j+1) + " = (" + /*Wult*/ + "+SWOverOpening)*((OpLength*0.5)+BLength)\n");
+			std::string Wult = ConvertToString(LoadOverWall, 2);
+			std::string OpLength = ConvertToString(Opening[i].Width, 2);
+
+			MinFkSup.append("  Leaf " + std::to_string(j+1) + " = (" + Wult + "kN/m + " + SWOverOpening[i][j] + "kN/m"));
+			MinFkSup.append("*((" + OpLength + "m * 0.5)+" + OpBLength + "m) = " + LoadAtSupport[i][j] + "kN\n");
 		}
 	}
 	// Print MinFkSup
