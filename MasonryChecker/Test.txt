@@ -1,0 +1,101 @@
+MasonryChecker. 
+by Thomas Roberts, CWA.
+
+An Open Source structural design program to consider the vertical load design of cavity masonry in accordance with BS 5628-1:2005.
+Stay up to date with the project or contribute on GitHub https://github.com/Ghostom998/DVLR/
+Wall Referenced: Test
+
+Consider the Slenderness Ratio:
+Thickness of Leaf 1, t1: 100.00mm
+Thickness of Leaf 2, t2: 102.50mm
+Height of Wall, H: 2500.00mm
+Restraint condition at the top of the wall is enhanced.
+Restraint factor to clause 28.3.1.1., RF: 0.75
+Effective Thickness, Teff = 2(t1 + t2) / 3 = 135.00mm
+Effective Height, Heff = RF*H = 0.75*2500.00 = 1875.00mm
+Hence,
+Slenderness Ratio, SR = Heff/Teff = 1875.00/135.00 = 13.89 [-]
+
+Consider a Partial Safety Factor:
+Construction control is normal.
+Manufacture control is special.
+Hence,
+Partial Safety from table 4a, PSF: 3.1 [-]
+
+Consider the characteristic loading at the top of the wall: 
+Leaf 1,
+  Eccentric, 
+	Dead load: 5.00kN/m
+	Live load: 4.00kN/m
+  Concentric, 
+	Dead load: 25.00kN/m
+	Live load: 6.00kN/m
+Leaf 2,
+  Eccentric, 
+	Dead load: 0.00kN/m
+	Live load: 0.00kN/m
+  Concentric, 
+	Dead load: 25.00kN/m
+	Live load: 0.00kN/m
+Self weight of Leaf 1, Ymas,Leaf1: 20.00kN/m^3
+Self weight of Leaf 2, Ymas,Leaf2: 21.00kN/m^3
+
+Wall Length & Openings:
+Length of Wall, L: 1200.00mm
+Opening Width, OpWidth,Leaf1: 910.00mm
+Bearing Length of member supporting Opening, BLength,Leaf1: 150.00mm
+Opening Width, OpWidth,Leaf2: 810.00mm
+Bearing Length of member supporting Opening, BLength,Leaf2: 150.00mm
+
+Ultimate Line Load at the top of the wall = 1.4(Ecc,DL + Conc,DL) + 1.6(Ecc,LL + Conc,LL)
+Wult,TopOfWall,Leaf 1 = 1.4(5.00kN/m + 25.00kN/m) + 1.6(4.00kN/m + 6.00kN/m) = 58.00kN/m
+Wult,TopOfWall,Leaf 2 = 1.4(0.00kN/m + 25.00kN/m) + 1.6(0.00kN/m + 0.00kN/m) = 35.00kN/m
+
+SelfWeight at 0.4H from the top of the wall:
+0.4H = 0.4*2.50m = 1.00m
+SW,0.4H = Ymas*0.4H*t
+SW,0.4H,Leaf1 = 20.00kN/m^3 * (100.00 / 1000)m * 1.00m = 2.00kN/m
+SW,0.4H,Leaf2 = 21.00kN/m^3 * (102.50 / 1000)m * 1.00m = 2.15kN/m
+SelfWeight of wall above opening(s):
+SW,Op = SWeight * (LeafThickness / 1000) * (HeightofWall - OpeningHeight)/1000
+Self Weight over Opening 1:
+20.00kN/m^3 * (0.10m * (2.50m - 2.10m) = 0.80kN/m
+21.00kN/m^3 * (0.10m * (2.50m - 2.10m) = 0.86kN/m
+Self Weight over Opening 2:
+20.00kN/m^3 * (0.10m * (2.50m - 1.20m) = 2.60kN/m
+21.00kN/m^3 * (0.10m * (2.50m - 1.20m) = 2.80kN/m
+
+Load Spread Length, Lspread = BLength + (OpeningHieght - 0.6H) < L
+0.6H = 0.6 * 2500.00mm = 1500.00mm
+Lspread Opening 1 = 150.00mm + (2100.00mm - 1500.00mm) = 750.00mm < 1200.00mm
+Therefore, Lspread Opening 1 = 750.00m
+Lspread Opening 2 = 150.00mm + (1200.00mm - 1500.00mm) = 0.00mm < 1200.00mm
+Therefore, Lspread Opening 2 = 0.00m
+
+Check whether the two load spreads lap:
+Loads lap if: Lspread1 + Lspread2 > L
+750.00mm + 0.00mm = 750.00mm < 1200.00mm
+Both loads do NOT lap and we will therefore need to design for the greatest concentration.
+Proceeding to the load spread analysis from the greater load at opening 
+
+Consider the load spread from opening 1:
+Wult = (Wult,TopOfWall + (1.4 * Selfweight@0.4H)) + ((Wult,TopOfWall + (1.4*SelfWeightOverOpening)) * (OpenWidth1 / 1000)) / (2 * (Lspread1 / 1000))
+58.00kN/m + (1.4*2.00kN/m)) + ((58.00kN/m + (1.4 * 0.80kN/m)) * (750.00mm / 1000)) / (2 * (750.00mm / 1000)) = 60.92kN/m
+35.00kN/m + (1.4*2.15kN/m)) + ((35.00kN/m + (1.4 * 0.86kN/m)) * (750.00mm / 1000)) / (2 * (750.00mm / 1000)) = 38.09kN/m
+
+Determine load at support.
+Wsup = (Wult+SWOverOpening)*((OpLength*0.5)+BLength)
+Opening 1:
+  Leaf 1 = (58.00kN/m + 0.80kN/m*((0.910m * 0.5)+0.150m) = 0.80kN
+  Leaf 2 = (58.00kN/m + 0.86kN/m*((0.910m * 0.5)+0.150m) = 0.86kN
+Opening 2:
+  Leaf 1 = (35.00kN/m + 2.60kN/m*((0.810m * 0.5)+0.150m) = 2.60kN
+  Leaf 2 = (35.00kN/m + 2.80kN/m*((0.810m * 0.5)+0.150m) = 2.80kN
+
+
+Bearing Length at opening 0, leaf 0 < 2t, therefore, Bearing Capacity Coefficient = 
+Consider the Eccentricity from the load above:
+Eccentric Load onto Leaf 1##ERROR_WRITING_OUTPUT##Please raise an issue on the GitHub page with the steps to reproduce it.https://github.com/Ghostom998/DVLR/issues/16.67mm
+Eccentric Load onto Leaf 2##ERROR_WRITING_OUTPUT##Please raise an issue on the GitHub page with the steps to reproduce it.https://github.com/Ghostom998/DVLR/issues/17.08mm
+
+

@@ -1,7 +1,7 @@
 // MasonryChecker.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"		// Turn on in Visual Studio
+#include "stdafx.h"
 #include "MasonryChecker.h"
 #include <iostream>
 #include <string> // Allows strings to be used
@@ -161,10 +161,10 @@ const double DVLR::GetSafetyFactor()
 
 	std::cout << "Please input normal or special CONSTRUCTION control (N/S):  ";
 	int ConstrControl = GetPSFControl();
-	(ConstrControl = 1) ? ConstructionControl = "normal" : ConstructionControl = "special";
+	(ConstrControl == 1) ? ConstructionControl = "normal" : ConstructionControl = "special";
 	std::cout << "Please input normal or special MANUFACTURE control (N/S):  ";
 	int ManufControl = GetPSFControl();
-	(ManufControl = 1) ? ManufactureControl = "normal" : ManufactureControl = "special";
+	(ManufControl == 1) ? ManufactureControl = "normal" : ManufactureControl = "special";
 
 	return PSFTable[ConstrControl][ManufControl];
 }
@@ -206,6 +206,7 @@ TwoLeafStruct DVLR::GetUltLoad()
 void DVLR::GetLoads()
 {
 	int x = 0; // access to load array
+	int y = 0; // access to leaf no.
 
 	std::cout << "Please enter the applied line loading at the top of the wall:" << std::endl;
 
@@ -223,7 +224,7 @@ void DVLR::GetLoads()
 				{
 					if (k == 1) { std::cout << "\n\tDead load [kN/m]: "; }
 					else { std::cout << "\tLive load [kN/m]: "; }
-					std::cin >> Load[x];
+					std::cin >> Load[y][x];
 
 					//Checks if user input a number
 					if (!std::cin) // or if(cin.fail())
@@ -241,7 +242,7 @@ void DVLR::GetLoads()
 						IsValid = true;
 					}
 				} while (!IsValid);
-				x++;
+				y++;
 			}
 		}
 	}
@@ -280,31 +281,32 @@ const TwoLeafStruct DVLR::GetSelfWeightOverOpening(double* SWeight, double* Leaf
 	// Self weight Over Opening
 	TwoLeafStruct SWOO;
 
-	SWOO.Leaf1 = SWeight[0] * (LeafThickness[0] / 1000) * (HeightofWall - OpeningHeight) / 1000;
-	SWOO.Leaf2 = SWeight[1] * (LeafThickness[1] / 1000) * (HeightofWall - OpeningHeight) / 1000;
+	SWOO.Leaf[0] = SWeight[0] * (LeafThickness[0] / 1000) * (HeightofWall - OpeningHeight) / 1000;
+	SWOO.Leaf[1] = SWeight[1] * (LeafThickness[1] / 1000) * (HeightofWall - OpeningHeight) / 1000;
 
 	std::cout << "Self weight of masonry over opening " << OpeningNumber + 1 << " = SelfWeight * (HeightofWall - OpeningHeight)" << std::endl;
-	std::cout << "SWOO, Leaf 1 = " << SWeight[0] << "kN/m^3 * " << LeafThickness[0] / 1000 << "m * (" << HeightofWall / 1000 << "m - " << OpeningHeight / 1000 << "m) = " << SWOO.Leaf1 << "kN/m" << std::endl;
-	std::cout << "SWOO, Leaf 2 = " << SWeight[1] << "kN/m^3 * " << LeafThickness[1] / 1000 << "m * (" << HeightofWall / 1000 << "m - " << OpeningHeight / 1000 << "m) = " << SWOO.Leaf2 << "kN/m" << std::endl;
+	std::cout << "SWOO, Leaf 1 = " << SWeight[0] << "kN/m^3 * " << LeafThickness[0] / 1000 << "m * (" << HeightofWall / 1000 << "m - " << OpeningHeight / 1000 << "m) = " << SWOO.Leaf[0] << "kN/m" << std::endl;
+	std::cout << "SWOO, Leaf 2 = " << SWeight[1] << "kN/m^3 * " << LeafThickness[1] / 1000 << "m * (" << HeightofWall / 1000 << "m - " << OpeningHeight / 1000 << "m) = " << SWOO.Leaf[1] << "kN/m" << std::endl;
 
 	return SWOO;
 }
 
-TwoLeafStruct DVLR::GetUltLineLoad(double* Load)
+TwoLeafStruct DVLR::GetUltLineLoad(double Load[2][2])
 {
-	LoadOverWall.Leaf1 = (1.4 * (Load[0] + Load[2])) + (1.6 * (Load[1] + Load[3]));
-	LoadOverWall.Leaf2 = (1.4 * (Load[4] + Load[6])) + (1.6 * (Load[5] + Load[7]));
-	/// View results
-	std::cout << "Ultimate line load over wall, Leaf 1: " << LoadOverWall.Leaf1 << "kN/m" << std::endl;
-	std::cout << "Ultimate Line load over wall, Leaf 2: " << LoadOverWall.Leaf2 << "kN/m" << std::endl;
+	for (int i = 0; i <= 1; i++)
+	{
+		LoadOverWall.Leaf[i] = (1.4 * (Load[i][0] + Load[i][2])) + (1.6 * (Load[i][1] + Load[i][3]));
+		std::cout << "Ultimate line load over wall, Leaf " << i + 1 << ": " << LoadOverWall.Leaf[i] << "kN/m" << std::endl;
+	}
 	return LoadOverWall;
 }
 
+// Horrible - TODO Dire need of refactor
 TwoLeafStruct DVLR::GetSpreadLoad()
 {
 	TwoLeafStruct WLoad;
-	double SwooLF1[2] = { SelfWeightOverOpening[0].Leaf1 ,SelfWeightOverOpening[1].Leaf1 };
-	double SwooLF2[2] = { SelfWeightOverOpening[0].Leaf2 ,SelfWeightOverOpening[1].Leaf2 };
+	auto* pOpening = Opening;
+	auto* pSelfWeightOverOpening = SelfWeightOverOpening;
 
 	// If both opening widths are not zero
 	if (Opening[0].IsOpening && Opening[1].IsOpening)
@@ -316,8 +318,10 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 			WLoad.Message.append("\nConsidering the load concentration from both load spreads lapping.");
 			std::cout << WLoad.Message << std::endl;
 			// Opening array passed as both are required per leaf calculation!
-			WLoad.Leaf1 = GetDoubleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], Opening[0].Width, Opening[1].Width, Opening[0].Spread, Opening[1].Spread, SelfWeightOverOpening[0].Leaf1, SelfWeightOverOpening[1].Leaf1);
-			WLoad.Leaf2 = GetDoubleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], Opening[0].Width, Opening[1].Width, Opening[0].Spread, Opening[1].Spread, SelfWeightOverOpening[0].Leaf2, SelfWeightOverOpening[1].Leaf2);
+			for (int i = 0; i <= 1; i++)
+			{
+				WLoad.Leaf[i] = GetDoubleLapLoad(LoadOverWall.Leaf[i], SelfWeight[i], &pOpening->Width, &pOpening->Spread, &pSelfWeightOverOpening->Leaf[i]);
+			}
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadLaps;
 		}
@@ -327,8 +331,12 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 			WLoad.Message = "Load spreads do not lap.";
 			WLoad.Message.append("\nConsidering the load concentration from the greatest load concentration.");
 			std::cout << WLoad.Message << std::endl;
-			WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], SelfWeightOverOpening[0].Leaf1, SelfWeightOverOpening[1].Leaf1);
-			WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], SelfWeightOverOpening[0].Leaf2, SelfWeightOverOpening[1].Leaf2);
+			//WLoad.Leaf[0] = GetSingleLapLoad(LoadOverWall.Leaf[0], SelfWeight[0], &Opening[2], SelfWeightOverOpening[0].Leaf[0], SelfWeightOverOpening[1].Leaf[0]);
+			//WLoad.Leaf[1] = GetSingleLapLoad(LoadOverWall.Leaf[1], SelfWeight[1], &Opening[2], SelfWeightOverOpening[0].Leaf[1], SelfWeightOverOpening[1].Leaf[1]);
+			for (int i = 0 ; i<=1 ; i++)
+			{
+				WLoad.Leaf[i] = GetSingleLapLoad(LoadOverWall.Leaf[i], SelfWeight[i], pOpening, &pSelfWeightOverOpening->Leaf[i]);
+			}
 			// Tells the print output which case to print i.e. No load spread
 			SpreadCaseStatus = SpreadCase::DblLoadSpreadDoesNOTLap;
 		}
@@ -338,9 +346,10 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 	{
 		WLoad.Message = "Considering a load concentration from the spread load.";
 		std::cout << WLoad.Message << std::endl;
-
-		WLoad.Leaf1 = GetSingleLapLoad(LoadOverWall.Leaf1, SelfWeight[0], &Opening[2], SelfWeightOverOpening[0].Leaf1, SelfWeightOverOpening[1].Leaf1);
-		WLoad.Leaf2 = GetSingleLapLoad(LoadOverWall.Leaf2, SelfWeight[1], &Opening[2], SelfWeightOverOpening[0].Leaf2, SelfWeightOverOpening[1].Leaf2);
+		for (int i = 0; i <= 1; i++)
+		{
+			WLoad.Leaf[i] = GetSingleLapLoad(LoadOverWall.Leaf[i], SelfWeight[i], pOpening, &pSelfWeightOverOpening->Leaf[i]);
+		}
 		// Tells the print output which case to print i.e. No load spread
 		SpreadCaseStatus = SpreadCase::SglLoadSpread;
 	}
@@ -349,8 +358,10 @@ TwoLeafStruct DVLR::GetSpreadLoad()
 	{
 		WLoad.Message = "No load spread due to concentrated loads.";
 		WLoad.Message.append("\nConsidering the ultimate load at 0.4H from the top of the wall.");
-		WLoad.Leaf1 = (1.4 * SelfWeight[0]) + LoadOverWall.Leaf1;
-		WLoad.Leaf2 = (1.4 * SelfWeight[1]) + LoadOverWall.Leaf2;
+		for (int i = 0; i <= 1; i++)
+		{
+			WLoad.Leaf[i] = (1.4 * SelfWeight[i]) + LoadOverWall.Leaf[i];;
+		}
 		// Tells the print output which case to print i.e. No load spread
 		SpreadCaseStatus = SpreadCase::NoLoadSpread;
 	}
@@ -418,11 +429,11 @@ const double DVLR::SpreadLength(double BearingLength, double Pt6H, double Length
 		return Spread;
 }
 
-const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening1, double SelfWeightOverOpening2)
+const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening[2])
 {
 	auto Part1 = UltLoad + (1.4 * Selfweight);
-	auto Part2 = (UltLoad + 1.4*SelfWeightOverOpening1) * (OpenWidth[0].Width / 1000) / (2 * (Opening[0].Spread / 1000));
-	auto Part3 = (UltLoad + 1.4*SelfWeightOverOpening2) * (OpenWidth[1].Width / 1000) / (2 * (Opening[1].Spread / 1000));
+	auto Part2 = (UltLoad + 1.4*SelfWeightOverOpening[0]) * (OpenWidth[0].Width / 1000) / (2 * (Opening[0].Spread / 1000));
+	auto Part3 = (UltLoad + 1.4*SelfWeightOverOpening[1]) * (OpenWidth[1].Width / 1000) / (2 * (Opening[1].Spread / 1000));
 
 	if (OpenWidth[0].Width >= OpenWidth[1].Width)
 	{
@@ -431,26 +442,19 @@ const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, Structura
 	return Part1 + Part3;
 }
 
-const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double OpenWidth1, double OpenWidth2, double Spread1, double Spread2, double SelfWeightOverOpening1, double SelfWeightOverOpening2)
+const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double OpenWidth[2], double Spread[2], double SelfWeightOverOpening[2])
 {
+	// Calculated in parts to reduce error and reusabillity/readabillity as code is used in other functions
 	auto Part1 = UltLoad + 1.4 * Selfweight;
-	auto Part2 = (UltLoad + 1.4*SelfWeightOverOpening2) * (OpenWidth2 / 1000) / (2 * (Spread2 / 1000));
-	auto Part3 = (UltLoad + 1.4*SelfWeightOverOpening1) * (OpenWidth1 / 1000) / (2 * (Spread1 / 1000));
-	std::cout << "Opening Width1: " << OpenWidth1 << " ; Opening Width2: " << OpenWidth2 << std::endl;
-	std::cout << "Opening Spread1: " << Spread1 << " ; Opening Spread2: " << Spread2 << std::endl;
+	auto Part2 = (UltLoad + 1.4*SelfWeightOverOpening[1]) * ( OpenWidth[1] / 1000) / (2 * (Spread[1] / 1000));
+	auto Part3 = (UltLoad + 1.4*SelfWeightOverOpening[0]) * (OpenWidth[0] / 1000) / (2 * (Spread[0] / 1000));
 	return Part1 + Part2 + Part3;
 }
 
-const TwoLeafStruct DVLR::GetBeta()
+void DVLR::DisplayCustomBearing(bool UseDefaultEccentricity)
 {
-	std::cout << "\nConsider a load capacity reduction due to eccentricity & slenderness:" << std::endl;
-	TwoLeafStruct B;
-
-	auto UseDefaultEccentricity = IsEccentricityDefault();
-
 	if (!UseDefaultEccentricity)
 	{
-		std::cout << std::endl;
 		for (int i = 0; i <= 1; i++)
 		{
 			Eccentricity[i] = GetUserEccentricity(TLeaf[i], i);
@@ -464,17 +468,23 @@ const TwoLeafStruct DVLR::GetBeta()
 			Eccentricity[i] = TLeaf[i] / 6;
 		}
 	}
+}
 
+void DVLR::DisplayEx()
+{
 	int x = 0;
+	int y = 0;
 	for (int i = 0; i <= 1; i++)
 	{
-		Ex[i] = GetEx(Load[x], Load[x + 1], Load[x + 2], Load[x + 3], TLeaf[i], Eccentricity[i]);
-		x += 4;
+		Ex[i] = GetEx(Load[y][x], Load[y][x + 1], Load[y][x + 2], Load[y][x + 3], TLeaf[i], Eccentricity[i]);
+		y += 4;
 		std::cout << "Resultant eccentricity of Leaf " << i + 1 << ": " << Ex[i] << " mm" << std::endl;
 	}
 	std::cout << std::endl;
+}
 
-	// Accidental Eccentricity
+void DVLR::DisplayEa()
+{
 	if(SR <= 6)
 	{
 		Ea[0] = 0;
@@ -489,24 +499,50 @@ const TwoLeafStruct DVLR::GetBeta()
 		}
 		std::cout << std::endl;
 	}
+}
 
-	// Total Eccentricity at 04H from the top of the wall
+void DVLR::DisplayEt()
+{
 	for (int i = 0; i <= 1; i++)
 	{
 		Et[i] = (0.6 * Ex[i]) + Ea[i];
 		std::cout << "Total Eccentricity at 0.4H from the top of Leaf " << i + 1 << ": " << Et[i] << " mm" << std::endl;
 	}
 	std::cout << std::endl;
-	// Maximum Eccentricity
+}
+
+void DVLR::DisplayEm()
+{
 	for (int i = 0; i <= 1; i++)
 	{
 		Em[i] = (Ex[i] > Et[i]) ? Ex[i] : Et[i];
 		std::cout << "Maximum Eccentricity of Leaf " << i + 1 << ": " << Em[i] << " mm" << std::endl;
 	}
 	std::cout << std::endl;
+}
 
-	B.Leaf1 = 1.1 * (1 - ((2 * Em[0]) / TLeaf[0]));
-	B.Leaf2 = 1.1 * (1 - ((2 * Em[1]) / TLeaf[1]));
+const TwoLeafStruct DVLR::GetBeta()
+{
+	std::cout << "\nConsider a load capacity reduction due to eccentricity & slenderness:\n" << std::endl;
+	TwoLeafStruct B; // Capacity Reduction Factor Beta
+
+	// Ask user if they would like to choose the default eccentricity of t/6 or an alternative
+	auto UseDefaultEccentricity = IsEccentricityDefault();
+	// Display value of eccentricity of eccentric load
+	DisplayCustomBearing(UseDefaultEccentricity);
+	// Resultant Eccentricity
+	DisplayEx();
+	// Accidental Eccentricity
+	DisplayEa();
+	// Total Eccentricity at 04H from the top of the wall
+	DisplayEt();
+	// Maximum Eccentricity
+	DisplayEm();
+
+	for (int i = 0; i <= 1; i++)
+	{
+		B.Leaf[i] = 1.1 * (1 - ((2 * Em[i]) / TLeaf[i]));
+	}
 
 	return B;
 }
@@ -657,14 +693,14 @@ const TwoLeafStruct DVLR::GetSmallAreaFactor()
 {
 	std::cout << std::endl << "Determine Small Area Factor:" << std::endl;
 	SAF.Message = "Area of Leaf 1 = ";
-	SAF.Leaf1 = GetSAF(TLeaf[0], L);
+	SAF.Leaf[0] = GetSAF(TLeaf[0], L);
 	std::string SAFMessageLeaf1 = SAF.Message;
-	std::cout << SAF.Leaf1 << std::endl << std::endl;
+	std::cout << SAF.Leaf[0] << std::endl << std::endl;
 
 	SAF.Message = "Area of Leaf 2 = ";
-	SAF.Leaf2 = GetSAF(TLeaf[1], L);
+	SAF.Leaf[1] = GetSAF(TLeaf[1], L);
 	std::string SAFMessageLeaf2 = SAF.Message;
-	std::cout << SAF.Leaf2 << std::endl << std::endl;
+	std::cout << SAF.Leaf[1] << std::endl << std::endl;
 
 	return SAF;
 }
@@ -672,8 +708,7 @@ const TwoLeafStruct DVLR::GetSmallAreaFactor()
 const double DVLR::GetSAF(double& LeafThickness, double& WallLength)
 {
 	double Area = (LeafThickness / 1000) * (WallLength / 1000);
-
-	SAF.Message.append(std::to_string(Area));
+	SAF.Message.append(ConvertToString(Area, 3));
 
 	if (Area < 0.2)
 	{
@@ -682,13 +717,10 @@ const double DVLR::GetSAF(double& LeafThickness, double& WallLength)
 		std::cout << SAF.Message;
 		return 0.7 + (1.5 * Area);
 	}
-	else
-	{
-		SAF.Message.append("m^2 > 0.2m^2 and hence small area factors are ignored.");
-		SAF.Message.append("\nSAF = ");
-		std::cout << SAF.Message;
-		return 1;
-	}
+	SAF.Message.append("m^2 > 0.2m^2 and hence small area factors are ignored.");
+	SAF.Message.append("\nSAF = ");
+	std::cout << SAF.Message;
+	return 1;
 }
 
 const double DVLR::GetMinFk(double& Ym, double& Wult, double& B, double& SAF, double& t)
@@ -696,20 +728,17 @@ const double DVLR::GetMinFk(double& Ym, double& Wult, double& B, double& SAF, do
 	return (Ym * Wult) / (B * SAF * t);
 }
 
-const TwoLeafStruct DVLR::CheckLintelBearing(double& BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SWOO, double& OpLength, double& SafetyFactor)
+const TwoLeafStruct DVLR::CheckLintelBearing(double& BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SWOO, double& OpLength, double& SafetyFactor, int i)
 {
-	// Get the bearing coefficient based on the bearing length and leaf thickness
-	MinBearCoeff.Leaf1 = GetMinBearCoeff(BLength, LeafThickness[0]);
-	MinBearCoeff.Leaf2 = GetMinBearCoeff(BLength, LeafThickness[1]);
-
-	// Get the Reaction at the support
-	LoadAtSupport[i].Leaf1 = GetLoadAtSupport(LineLoadOverWall.Leaf1, SWOO.Leaf1, OpLength, BLength);
-	LoadAtSupport[i].Leaf2 = GetLoadAtSupport(LineLoadOverWall.Leaf2, SWOO.Leaf2, OpLength, BLength);
-
-	MinBearingStrength.Leaf1 = (LoadAtSupport.Leaf1 * SafetyFactor *  1000) / (MinBearCoeff.Leaf1 * LeafThickness[0] * BLength);
-	MinBearingStrength.Leaf2 = (LoadAtSupport.Leaf2 * SafetyFactor * 1000) / (MinBearCoeff.Leaf2 * LeafThickness[1] * BLength);
-
-	return MinBearingStrength;
+		for (int j = 0; j <= 1; j++)
+		{
+			// Get the bearing coefficient based on the bearing length and leaf thickness
+			MinBearCoeff[i].Leaf[j] = GetMinBearCoeff(BLength, LeafThickness[j]);
+			// Get the Reaction at the support
+			LoadAtSupport[i].Leaf[j] = GetLoadAtSupport(LineLoadOverWall.Leaf[j], SWOO.Leaf[j], OpLength, BLength); // Get the Reaction at the support
+			MinBearingStrength[i].Leaf[j] = (LoadAtSupport[i].Leaf[j] * SafetyFactor * 1000) / (MinBearCoeff[i].Leaf[j] * LeafThickness[0] * BLength);
+		}
+	return MinBearingStrength[i];
 }
 
 const double DVLR::GetMinBearCoeff(double& BLength, double LeafThickness)

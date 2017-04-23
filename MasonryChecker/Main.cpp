@@ -1,7 +1,6 @@
 // MasonryChecker.cpp : Defines the entry point for the console application.
 //
-
-#include "stdafx.h"		// Turn on in Visual Studio
+#include "stdafx.h"
 #include "MasonryChecker.h"
 #include <iostream>
 #include <limits>
@@ -47,48 +46,45 @@ void DVLR::StartProgram()
 	PSF = GetSafetyFactor();
 	std::cout << "And therefore the Partial Safety Factor to be adopted, PSF = " << PSF << std::endl << std::endl;
 
-	WultLoad = Wall.GetUltLoad();
-	std::cout << "Ultimate line load in Leaf 1: " << WultLoad.Leaf1 << " kN/m" << std::endl;
-	std::cout << "Ultimate line load in Leaf 2: " << WultLoad.Leaf2 << " kN/m" << std::endl;
+	WultLoad = GetUltLoad();
+	for (int i = 0 ; i<=1 ; i++)
+	{
+		std::cout << "Ultimate line load in Leaf " << i+1 << ": " << WultLoad.Leaf[i] << " kN / m" << std::endl;
+	}
 
 	if (Opening[0].IsOpening || Opening[1].IsOpening) std::cout << "\nCheck the bearing at the supports:" << std::endl;
+	//std::cout << "Min Bearing Strength required at support " << std::endl;
 	for (int i = 0; i <= 1; i++)
 	{
 		if (Opening[i].IsOpening)
 		{
-			MinBStrength[i] = CheckLintelBearing(Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF);
+			MinBStrength[i] = CheckLintelBearing(Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF, i);
 			std::cout << "Min Bearing Strength required at Support " << i + 1 << std::endl;
-			std::cout << "Leaf 1: " << MinBStrength[i].Leaf1 << "N/mm2" << std::endl;
-			std::cout << "Leaf 2: " << MinBStrength[i].Leaf2 << "N/mm2" << std::endl;
+			std::cout << "  Leaf " << i+1 << ": " << MinBStrength[i].Leaf[0] << "N/mm2" << std::endl;
 		}
 	}
 
 	Beta = GetBeta();
-	std::cout << "Capacity Reduction Factor to Leaf 1, Beta: " << Beta.Leaf1 << std::endl;
-	std::cout << "Capacity Reduction Factor to Leaf 2, Beta: " << Beta.Leaf2 << std::endl;
+	std::cout << "Capacity Reduction Factor to Leaf 1, Beta: " << Beta.Leaf[0] << std::endl;
+	std::cout << "Capacity Reduction Factor to Leaf 2, Beta: " << Beta.Leaf[1] << std::endl;
 
 	SAF = GetSmallAreaFactor(); // Messages inside function
 
 	std::cout << "Determine Minimum required masonry strength:" << std::endl;
-	MinFk.Leaf1 = GetMinFk(PSF, WultLoad.Leaf1, Beta.Leaf1, SAF.Leaf1, TLeaf[0]);
-	MinFk.Leaf2 = GetMinFk(PSF, WultLoad.Leaf2, Beta.Leaf2, SAF.Leaf2, TLeaf[1]);
-	std::cout << "Minimum required masonry strength to Leaf 1, Fk = " << MinFk.Leaf1 << "N/mm2" << std::endl;
-	std::cout << "Minimum required masonry strength to Leaf 2, Fk = " << MinFk.Leaf2 << "N/mm2" << std::endl;
+	for (int i = 0; i <= 1; i++)
+	{
+		MinFk.Leaf[i] = GetMinFk(PSF, WultLoad.Leaf[i], Beta.Leaf[i], SAF.Leaf[i], TLeaf[i]);
+		std::cout << "Minimum required masonry strength to Leaf " << i << ", Fk = " << MinFk.Leaf[0] << "N/mm2" << std::endl;
+	}
 
 	return;
 }
 
 bool AskToSaveFile()
 {
-	// Flushes the input buffer
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
 	std::cout << "\nDo you want to save the output (y/n)? ";
 	std::string Response = "";
 	std::getline(std::cin, Response);
 	std::cout << std::endl;
-
-	// Returns the bool true if the first letter begins
-	// with the upper or lowercase "y" else returns false.
 	return (Response[0] == 'y') || (Response[0] == 'Y');
 }

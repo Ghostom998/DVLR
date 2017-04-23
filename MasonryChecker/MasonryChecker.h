@@ -1,5 +1,8 @@
+#include "stdafx.h"
 #ifndef DVLR_H // Inclusion guards
 #define DVLR_H
+
+#define NUMELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 
 // TODO - Create 1 wall object per leaf as an array to cleanup code, make class cleaner and make TwoLeafStruct redundant
 
@@ -9,7 +12,7 @@
 
 // Global Function - Turns any value into a string
 template <class T>
-std::string ConvertToString(T & Num, int DecPlaces)
+std::string ConvertToString(T& Num, int DecPlaces)
 {
 	std::ostringstream NewStringStream;
 	NewStringStream << std::fixed << std::setprecision(DecPlaces) << Num;
@@ -17,7 +20,7 @@ std::string ConvertToString(T & Num, int DecPlaces)
 }
 // Global Function - Turns any value into a string with a multiplier for unit conversion, etc.
 template <class T>
-std::string ConvertToString(T & Num, int DecPlaces, float Multiplier)
+std::string ConvertToString(T & Num, int DecPlaces, double Multiplier)
 {
 	std::ostringstream NewStringStream;
 	NewStringStream << std::fixed << std::setprecision(DecPlaces) << Num*Multiplier;
@@ -28,8 +31,7 @@ std::string ConvertToString(T & Num, int DecPlaces, float Multiplier)
 // Ultimate loading per leaf. Allows functions to return two values. Values initialized to 0
 struct TwoLeafStruct
 {
-	double Leaf1 = 0;
-	double Leaf2 = 0;
+	double Leaf[2] = {0, 0};
 	std::string Message = "";
 };
 
@@ -86,7 +88,6 @@ public: // Methods
 
 	const double GetSafetyFactor();
 		int GetPSFControl();
-		int GetManufControl();
 
 	// TODO - Include for out of plane wall load I.E. beam perpendicular to wall
 	// Point load with independent load. Maybe ask user if beam is present to prevent unnecessary input/output.
@@ -95,13 +96,17 @@ public: // Methods
 		void GetOpenings();
 			const double SpreadLength(double, double, double, double, int);
 		TwoLeafStruct GetSpreadLoad();
-	double GetOpeningWidth(int i);
-	double GetWallLength();
 	const void GetSelfWeight();
 	static const TwoLeafStruct GetSelfWeightOverOpening(double*, double*, double, double, int);
-		const double GetSingleLapLoad(double, double, struct StructuralOpenings OpenWidth[2], double, double);
-		const double GetDoubleLapLoad(double, double, double, double, double Spread1, double Spread2, double SelfWeightOverOpening1, double SelfWeightOverOpening2);
-		TwoLeafStruct GetUltLineLoad(double*);
+	const double GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening[2]);
+		const double GetDoubleLapLoad(double UltLoad, double Selfweight, double OpenWidth[2], double Spread[2], double SelfWeightOverOpening[2]);
+		//const double GetDoubleLapLoad(double, double, double, double, double Spread1, double Spread2, double SelfWeightOverOpening1, double SelfWeightOverOpening2);
+	void DisplayCustomBearing(bool UseDefaultEccentricity);
+	void DisplayEx();
+	void DisplayEa();
+	void DisplayEt();
+	void DisplayEm();
+	TwoLeafStruct GetUltLineLoad(double Load[2][2]);
 
 	const TwoLeafStruct GetBeta();
 	bool IsEccentricityDefault() const;
@@ -115,7 +120,7 @@ public: // Methods
 
 	static const double GetMinFk(double&, double&, double&, double&, double&);
 
-	const TwoLeafStruct CheckLintelBearing(double & BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SelfWeightOverOpening, double& OpLength, double& SafetyFactor);
+	const TwoLeafStruct CheckLintelBearing(double & BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SelfWeightOverOpening, double& OpLength, double& SafetyFactor, int i);
 	static const double GetMinBearCoeff(double& BLength, double LeafThickness);
 	static const double GetLoadAtSupport(double Wult, double SWOverOpening, double OpLength, double BLength);
 
@@ -125,7 +130,7 @@ public: // Methods
 	const int PrintToFile();
 
 		// Print the introduction section
-	static const std::string PrintIntro(std::string);
+	static const std::string PrintIntro(std::string&);
 
 		// Print the slenderness ratio and its components
 		const std::string PrintSlenderness();
@@ -144,8 +149,10 @@ public: // Methods
 			const std::string PrintNoLoadSpread();
 			const std::string PrintDoubleLoadSpread();
 			const std::string PrintSingleSpread();
+			const std::string PrintLoadAtSupport();
 
 		const std::string PrintMinFkSup();
+			const std::string PrintSupportFactor();
 		// Print the eccentricity, SAF and the capacity reduction factor
 		const std::string PrintEccentricity();
 			const std::string PrintUserEccentricity();
@@ -158,6 +165,8 @@ private: // Members
 
 	/// Leaf thicknesses
 	double TLeaf[2] = { 0, 0 };
+	// TODO include as part of the constructor
+	// static const int NumLeaves = NUMELEMS(TLeaf);
 	double Teff = 0;
 	std::string TeffEquation = "";
 	/// Wall height
@@ -183,19 +192,17 @@ private: // Members
 	/// Manufacture Control
 	std::string ManufactureControl = "";
 	/// DL, LL, eccentric, concentric, leaf 1, leaf 2
-	double Load[8] =
-	{
-		0, // 0. Leaf 1, Eccentric, Dead load
-		0, // 1. Leaf 1, Eccentric, Live load
-		0, // 2. Leaf 1, Concentric, Dead load
-		0, // 3. Leaf 1, Concentric, Live load
-		0, // 4. Leaf 2, Eccentric, Dead load
-		0, // 5. Leaf 2 Eccentric, Live load
-		0, // 6. Leaf 2 Concentric, Dead load
-		0  // 7. Leaf 2 Concentric, Live load
+	double Load[2][4] = // 1st Member Leaf No.
+	{ {},
+		{
+			0, // 0. Eccentric, Dead load
+			0, // 1. Eccentric, Live load
+			0, // 2. Concentric, Dead load
+			0, // 3. Concentric, Live load
+		}
 	};
 	/// Masonry Self weight
-	double UnitWeight[2] = { 0 , 0 };
+	double UnitWeight[2];
 	double SelfWeight[2] = { 0 , 0 };
 	TwoLeafStruct SelfWeightOverOpening[2] = { 0 , 0 };
 	/// Ultimate Load
@@ -225,11 +232,12 @@ private: // Members
 	/// A default case which should indicate whether or not the program is properly assigning the case
 	SpreadCase SpreadCaseStatus = SpreadCase::Invalid_status;
 
-	// Applied bearing stress beneath the lintel bearing
-	TwoLeafStruct MinBStrength[2]; // first member => both leaves of opening 1, second member => both leaves of opening 2
-	TwoLeafStruct MinBearCoeff;
+	// first member => both leaves of opening 1, second member => both leaves of opening 2
+	/// Applied bearing stress beneath the lintel bearing
+	TwoLeafStruct MinBStrength[2]; 
+	TwoLeafStruct MinBearCoeff[2];
 	TwoLeafStruct LoadAtSupport[2];
-	TwoLeafStruct MinBearingStrength;
+	TwoLeafStruct MinBearingStrength[2];
 };
 
 #endif // DVLR_H
