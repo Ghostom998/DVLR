@@ -97,23 +97,27 @@ public: // Methods
 			const double SpreadLength(double, double, double, double, int);
 		TwoLeafStruct GetSpreadLoad();
 	const void GetSelfWeight();
-	static const TwoLeafStruct GetSelfWeightOverOpening(double*, double*, double, double, int);
+	static const double GetSelfWeightOverOpening(double*, double*, double, double);
+	TwoLeafStruct GetUltLineLoad(double Load[2][4]);
+	void DoubleLoadSpreadOutput(TwoLeafStruct& WLoad, StructuralOpenings* pOpening, TwoLeafStruct* pSelfWeightOverOpening);
+	void LoadSpreadNotLapOutput(TwoLeafStruct& WLoad, StructuralOpenings* pOpening, TwoLeafStruct* pSelfWeightOverOpening);
+	void SingleLoadSpreadOutput(TwoLeafStruct& WLoad, StructuralOpenings* pOpening, TwoLeafStruct* pSelfWeightOverOpening);
+	void NoLoadSpreadOutput(TwoLeafStruct& WLoad);
 	const double GetSingleLapLoad(double UltLoad, double Selfweight, StructuralOpenings OpenWidth[2], double SelfWeightOverOpening[2]);
 		const double GetDoubleLapLoad(double UltLoad, double Selfweight, double OpenWidth[2], double Spread[2], double SelfWeightOverOpening[2]);
 		//const double GetDoubleLapLoad(double, double, double, double, double Spread1, double Spread2, double SelfWeightOverOpening1, double SelfWeightOverOpening2);
 	void DisplayCustomBearing(bool UseDefaultEccentricity);
-	void DisplayEx();
-	void DisplayEa();
-	void DisplayEt();
-	void DisplayEm();
-	TwoLeafStruct GetUltLineLoad(double Load[2][2]);
-
+	
 	const TwoLeafStruct GetBeta();
 	bool IsEccentricityDefault() const;
 		const double GetUserEccentricity(double, int);
 		const double CustomBearing(double, int);
 		const double GetCustomEccentricity(double, int);
 	static const double GetEx(double, double, double, double, double, double);
+		void DisplayEx();
+		void DisplayEa();
+		void DisplayEt();
+		void DisplayEm();
 
 	const TwoLeafStruct GetSmallAreaFactor();
 		const double GetSAF(double&, double&);
@@ -146,8 +150,10 @@ public: // Methods
 			const std::string PrintSelfWeight();
 			const std::string PrintSWWallOver();
 			const std::string PrintLoadSpreadLength();
+			const std::string PrintSpreadLengthMessage(int i);
 			const std::string PrintNoLoadSpread();
-			const std::string PrintDoubleLoadSpread();
+	void PrintLoadDoesNotLap(std::string Length, std::string DoubleLoadSpread);
+	const std::string PrintDoubleLoadSpread();
 			const std::string PrintSingleSpread();
 			const std::string PrintLoadAtSupport();
 
@@ -193,7 +199,10 @@ private: // Members
 	std::string ManufactureControl = "";
 	/// DL, LL, eccentric, concentric, leaf 1, leaf 2
 	double Load[2][4] = // 1st Member Leaf No.
-	{ {},
+	{ 
+		{
+			0, 0
+		},
 		{
 			0, // 0. Eccentric, Dead load
 			0, // 1. Eccentric, Live load

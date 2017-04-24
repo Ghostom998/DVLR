@@ -54,19 +54,24 @@ void DVLR::StartProgram()
 
 	if (Opening[0].IsOpening || Opening[1].IsOpening) std::cout << "\nCheck the bearing at the supports:" << std::endl;
 	//std::cout << "Min Bearing Strength required at support " << std::endl;
-	for (int i = 0; i <= 1; i++)
+	for (int i = 0; i <= 1; i++) // Opening
 	{
 		if (Opening[i].IsOpening)
 		{
-			MinBStrength[i] = CheckLintelBearing(Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF, i);
 			std::cout << "Min Bearing Strength required at Support " << i + 1 << std::endl;
-			std::cout << "  Leaf " << i+1 << ": " << MinBStrength[i].Leaf[0] << "N/mm2" << std::endl;
+			for (int j = 0; j <= 1; j++) // Leaf
+			{
+				MinBStrength[i] = CheckLintelBearing(Opening[i].BLength, TLeaf, LoadOverWall, SelfWeightOverOpening[i], Opening[i].Width, PSF, i);
+				std::cout << "  Leaf " << i + 1 << ": " << MinBStrength[i].Leaf[j] << "N/mm2" << std::endl;
+			}
 		}
 	}
 
 	Beta = GetBeta();
-	std::cout << "Capacity Reduction Factor to Leaf 1, Beta: " << Beta.Leaf[0] << std::endl;
-	std::cout << "Capacity Reduction Factor to Leaf 2, Beta: " << Beta.Leaf[1] << std::endl;
+	for (int i = 0 ; i <= 1 ; i++)
+	{
+		std::cout << "Capacity Reduction Factor to Leaf " << i + 1 << ", Beta: " << Beta.Leaf[i] << std::endl;
+	}
 
 	SAF = GetSmallAreaFactor(); // Messages inside function
 
@@ -74,7 +79,7 @@ void DVLR::StartProgram()
 	for (int i = 0; i <= 1; i++)
 	{
 		MinFk.Leaf[i] = GetMinFk(PSF, WultLoad.Leaf[i], Beta.Leaf[i], SAF.Leaf[i], TLeaf[i]);
-		std::cout << "Minimum required masonry strength to Leaf " << i << ", Fk = " << MinFk.Leaf[0] << "N/mm2" << std::endl;
+		std::cout << "Minimum required masonry strength to Leaf " << i+1 << ", Fk = " << MinFk.Leaf[i] << "N/mm2" << std::endl;
 	}
 
 	return;

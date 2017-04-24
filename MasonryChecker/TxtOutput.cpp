@@ -440,15 +440,32 @@ const std::string DVLR::PrintLoadSpreadLength()
 	for (int i = 0; i <= 1; i++)
 	{
 		std::string SpreadLength = ConvertToString(Opening[i].Spread, 2);
-
+		std::string SpreadLengthMessage = PrintSpreadLengthMessage(i);
 		if (Opening[i].IsOpening)
 		{
-			LoadSpeadLength.append("\nLspread Opening " + std::to_string(i+1) + " = " + SpreadLengthMessage[i]);
+			LoadSpeadLength.append("\nLspread Opening " + std::to_string(i+1) + " = " + SpreadLengthMessage);
 			LoadSpeadLength.append("\nTherefore, Lspread Opening " + std::to_string(i + 1) + " = " + SpreadLength + "m");
 		}
 	}
-
 	return LoadSpeadLength;
+}
+
+const std::string DVLR::PrintSpreadLengthMessage(int i)
+{
+	std::string SpreadLength = ConvertToString(Opening[i].Spread, 2);
+	std::string WallLength = ConvertToString(L, 2);
+	std::string PointSixH = ConvertToString(HWall, 2, 0.6);
+	std::string OpHieght = ConvertToString(HWall, 2);
+	std::string Blength = ConvertToString(Opening[i].BLength, 2);
+
+	std::string LoadSpreadLength = Blength + "mm + (" + OpHieght + "mm - " + PointSixH + "mm) = ";
+	if (Opening[i].Spread > L)
+	{
+		LoadSpreadLength.append(SpreadLength + "mm > " + WallLength + "mm");
+		return LoadSpreadLength;
+	}
+	LoadSpreadLength.append(SpreadLength + "mm < " + WallLength + "mm");
+	return LoadSpreadLength;
 }
 
 const std::string DVLR::PrintNoLoadSpread()
@@ -468,6 +485,17 @@ const std::string DVLR::PrintNoLoadSpread()
 	return NoLoadSpread;
 }
 
+void DVLR::PrintLoadDoesNotLap(std::string Length, std::string DoubleLoadSpread)
+{
+	DoubleLoadSpread.append("< ");
+	DoubleLoadSpread.append(Length + "mm");
+	DoubleLoadSpread.append("\nBoth loads do NOT lap and we will therefore need to design for the greatest concentration.");
+	DoubleLoadSpread.append("\nProceeding to the load spread analysis from the greater load at opening " + BiggestOpening);
+	std::string SingleSpreadLoad = PrintSingleSpread();
+	DoubleLoadSpread.append(SingleSpreadLoad);
+}
+
+// TODO - Refactor??
 const std::string DVLR::PrintDoubleLoadSpread()
 {
 	std::string SpreadLength[2] = { ConvertToString(Opening[0].Spread,2), ConvertToString(Opening[1].Spread,2) };
@@ -480,12 +508,7 @@ const std::string DVLR::PrintDoubleLoadSpread()
 	DoubleLoadSpread.append("\n" + SpreadLength[0] + "mm + " + SpreadLength[1] + "mm = " + SpreadLengthSum + "mm ");
 	if (SpreadCaseStatus == SpreadCase::DblLoadSpreadDoesNOTLap)
 	{
-		DoubleLoadSpread.append("< ");
-		DoubleLoadSpread.append(Length + "mm");
-		DoubleLoadSpread.append("\nBoth loads do NOT lap and we will therefore need to design for the greatest concentration.");
-		DoubleLoadSpread.append("\nProceeding to the load spread analysis from the greater load at opening " + BiggestOpening);
-		std::string SingleSpreadLoad = PrintSingleSpread();
-		DoubleLoadSpread.append(SingleSpreadLoad);
+		PrintLoadDoesNotLap(Length, DoubleLoadSpread);
 	}
 	else
 	{
@@ -569,23 +592,15 @@ const std::string DVLR::PrintLoadAtSupport()
 {
 	std::string Wult[2] = { ConvertToString(LoadOverWall.Leaf[0], 2), ConvertToString(LoadOverWall.Leaf[1], 2) };
 	std::string SWOverOpening[2][2]; // 1st member opening, 2nd member leaf
-	for (int i = 0; i <= 1; i++)
-	{
-	for (int j = 0; j <= 1; j++)
-		{
-			SWOverOpening[i][j] = ConvertToString(SelfWeightOverOpening[i].Leaf[j], 2);
-		}
-	}
 	std::string Wsup[2][2];  // 1st member opening, 2nd member leaf
 	for (int i = 0; i <= 1; i++)
 	{
 		for (int j = 0; j <= 1; j++)
 		{
+			SWOverOpening[i][j] = ConvertToString(SelfWeightOverOpening[i].Leaf[j], 2);
 			Wsup[i][j] = ConvertToString(SelfWeightOverOpening[i].Leaf[j], 2);
 		}
 	}
-	
-
 	std::string MinFkSup = "\nDetermine load at support.\n";
 	MinFkSup.append("Wsup = (Wult+SWOverOpening)*((OpLength*0.5)+BLength)\n");
 
@@ -607,18 +622,19 @@ const std::string DVLR::PrintLoadAtSupport()
 
 const std::string DVLR::PrintSupportFactor()
 {
-	std::string BearingLength[2] = {ConvertToString(Opening[0].BLength, 0), ConvertToString(Opening[1].BLength, 0)};
+	std::string BearingLength[2];
 	//std::string BearingCoeff[2] = {ConvertToString()};
 	std::string SupportFactorText = "\n\n";
 
 	for (int i = 0; i <= 1; i++) // Per Opening
 	{
+		BearingLength[i] = ConvertToString(Opening[i].BLength, 0);
 		for (int j = 0; j <= 1; j++) // Per Leaf
 		{
 			if (Opening[i].BLength < (2 * TLeaf[j]))
 			{
-				SupportFactorText.append("Bearing Length at opening " + std::to_string(i+1) + ", leaf " + std::to_string(j+1) + " < 2t,");
-				SupportFactorText.append(" therefore, Bearing Capacity Coefficient = \n\n");
+				SupportFactorText.append("Bearing Length at opening " + std::to_string(i+1) + ", leaf " + std::to_string(j+1) + " = " + BearingLength[i]);
+				SupportFactorText.append(" < 2t, therefore, Bearing Capacity Coefficient = \n\n");
 				return SupportFactorText;
 			}
 			if (Opening[i].BLength < (3 * TLeaf[j]))
