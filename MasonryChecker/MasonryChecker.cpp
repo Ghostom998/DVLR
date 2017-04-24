@@ -302,6 +302,7 @@ TwoLeafStruct DVLR::GetUltLineLoad(double Load[2][2])
 }
 
 // Horrible - TODO Dire need of refactor
+// Extract Statements between if and else statements to methods.
 TwoLeafStruct DVLR::GetSpreadLoad()
 {
 	TwoLeafStruct WLoad;
@@ -442,6 +443,7 @@ const double DVLR::GetSingleLapLoad(double UltLoad, double Selfweight, Structura
 	return Part1 + Part3;
 }
 
+// TODO - Fix error causing this to compute hexadecimals! (probably passing memory address reference / pointers - Check) see
 const double DVLR::GetDoubleLapLoad(double UltLoad, double Selfweight, double OpenWidth[2], double Spread[2], double SelfWeightOverOpening[2])
 {
 	// Calculated in parts to reduce error and reusabillity/readabillity as code is used in other functions
@@ -730,14 +732,14 @@ const double DVLR::GetMinFk(double& Ym, double& Wult, double& B, double& SAF, do
 
 const TwoLeafStruct DVLR::CheckLintelBearing(double& BLength, double LeafThickness[2], TwoLeafStruct LineLoadOverWall, TwoLeafStruct SWOO, double& OpLength, double& SafetyFactor, int i)
 {
-		for (int j = 0; j <= 1; j++)
-		{
-			// Get the bearing coefficient based on the bearing length and leaf thickness
-			MinBearCoeff[i].Leaf[j] = GetMinBearCoeff(BLength, LeafThickness[j]);
-			// Get the Reaction at the support
-			LoadAtSupport[i].Leaf[j] = GetLoadAtSupport(LineLoadOverWall.Leaf[j], SWOO.Leaf[j], OpLength, BLength); // Get the Reaction at the support
-			MinBearingStrength[i].Leaf[j] = (LoadAtSupport[i].Leaf[j] * SafetyFactor * 1000) / (MinBearCoeff[i].Leaf[j] * LeafThickness[0] * BLength);
-		}
+	for (int j = 0; j <= 1; j++)
+	{
+		// Get the bearing coefficient based on the bearing length and leaf thickness
+		MinBearCoeff[i].Leaf[j] = GetMinBearCoeff(BLength, LeafThickness[j]);
+		// Get the Reaction at the support
+		LoadAtSupport[i].Leaf[j] = GetLoadAtSupport(LineLoadOverWall.Leaf[j], SWOO.Leaf[j], OpLength, BLength); // Get the Reaction at the support
+		MinBearingStrength[i].Leaf[j] = (LoadAtSupport[i].Leaf[j] * SafetyFactor * 1000) / (MinBearCoeff[i].Leaf[j] * LeafThickness[0] * BLength);
+	}
 	return MinBearingStrength[i];
 }
 
