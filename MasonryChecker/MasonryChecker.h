@@ -10,23 +10,14 @@
 #include <sstream>		// String Stream: allows numbers to be cast as strings (i.e. to_string() )
 #include <iomanip>      // std::setprecision -> allows us to reduce the decimal places in the string stream
 
-// Global Function - Turns any value into a string
-template <class T>
-std::string ConvertToString(T& Num, int DecPlaces)
-{
-	std::ostringstream NewStringStream;
-	NewStringStream << std::fixed << std::setprecision(DecPlaces) << Num;
-	return NewStringStream.str();
-}
 // Global Function - Turns any value into a string with a multiplier for unit conversion, etc.
 template <class T>
-std::string ConvertToString(T & Num, int DecPlaces, double Multiplier)
+std::string Str(T & Num, int DecPlaces = 2, double Multiplier = 1)
 {
 	std::ostringstream NewStringStream;
 	NewStringStream << std::fixed << std::setprecision(DecPlaces) << Num*Multiplier;
 	return NewStringStream.str();
 }
-
 
 // Ultimate loading per leaf. Allows functions to return two values. Values initialized to 0
 struct TwoLeafStruct
@@ -97,9 +88,9 @@ public: // Methods
 			const double SpreadLength(double, double, double, double, int);
 		TwoLeafStruct GetSpreadLoad();
 	const void GetSelfWeight();
-	static const double GetSelfWeightOverOpening(double*, double*, double, double);
+	static const double GetSelfWeightOverOpening(double, double, double, double, int);
 	TwoLeafStruct GetUltLineLoad(double Load[2][4]);
-	void DoubleLoadSpreadOutput(TwoLeafStruct& WLoad, StructuralOpenings* pOpening, TwoLeafStruct* pSelfWeightOverOpening);
+	void DoubleLoadSpreadOutput(TwoLeafStruct& WLoad, StructuralOpenings* Open, TwoLeafStruct* SWeightOverOpening);
 	void LoadSpreadNotLapOutput(TwoLeafStruct& WLoad, StructuralOpenings* pOpening, TwoLeafStruct* pSelfWeightOverOpening);
 	void SingleLoadSpreadOutput(TwoLeafStruct& WLoad, StructuralOpenings* pOpening, TwoLeafStruct* pSelfWeightOverOpening);
 	void NoLoadSpreadOutput(TwoLeafStruct& WLoad);
@@ -162,6 +153,11 @@ public: // Methods
 		// Print the eccentricity, SAF and the capacity reduction factor
 		const std::string PrintEccentricity();
 			const std::string PrintUserEccentricity();
+			const std::string PrintEx();
+			const std::string PrintEa();
+			const std::string PrintEt();
+			const std::string PrintEm();
+			const std::string PrintBeta();
 
 		const std::string PrintSAF();
 
